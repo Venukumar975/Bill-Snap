@@ -8,11 +8,11 @@ import {
   Cpu, 
   Menu, 
   RefreshCw,
-  Plus,
   TrendingUp,
   Receipt
 } from 'lucide-react';
 import ImagePicker from './components/ImagePicker';
+import AddBillFAB from './components/AddBillFAB';
 import BillResult from './components/BillResult';
 import BillCard from './components/BillCard';
 import SettingsModal from './components/SettingsModal';
@@ -54,7 +54,7 @@ export default function App() {
     loadBills();
   }, []);
 
-  // Background Model Engine Initialization (using localStorage cache)
+  // Background Model Engine Initialization
   useEffect(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) return;
@@ -135,7 +135,6 @@ export default function App() {
     }
   };
 
-  // Real Save to IndexedDB
   const handleSaveBill = async (billData) => {
     try {
       const saved = await saveBill(billData);
@@ -146,7 +145,6 @@ export default function App() {
     }
   };
 
-  // Delete from IndexedDB
   const handleDeleteBill = async (id) => {
     try {
       await deleteBill(id);
@@ -156,7 +154,6 @@ export default function App() {
     }
   };
 
-  // Clear all bills from IndexedDB
   const handleClearAllBills = async () => {
     try {
       await clearAllBills();
@@ -176,12 +173,12 @@ export default function App() {
       <main className="w-full max-w-md h-screen sm:h-[844px] bg-white sm:rounded-3xl shadow-xl flex flex-col overflow-hidden relative border border-slate-200/60">
         
         {/* Header */}
-        <header className="px-4 pt-5 pb-3.5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+        <header className="px-4 pt-5 pb-3.5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20">
           <div className="flex items-center gap-2.5">
             {/* 3 Horizontal Lines (Opens Slide-over Sidebar) */}
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 hover:text-slate-900 flex items-center justify-center transition active:scale-95 shadow-sm"
+              className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700 hover:bg-slate-100 hover:text-slate-900 flex items-center justify-center transition active:scale-95 shadow-xs"
               title="Menu"
             >
               <Menu className="w-4 h-4" />
@@ -224,12 +221,12 @@ export default function App() {
         </header>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+        <div className="flex-1 overflow-y-auto px-4 pt-3 flex flex-col relative">
           {/* VIEW 1: Initial State (No photo picked yet) */}
           {!selectedImage && (
             <>
               {savedBills.length === 0 ? (
-                /* Empty State: Prompt user to snap their first bill */
+                /* Empty State: Prompt user to snap first bill */
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                   <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
                     <ReceiptText className="w-8 h-8" />
@@ -244,26 +241,30 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                /* Saved Bills List View (Home Screen Feed) */
-                <div className="flex-1 flex flex-col space-y-4">
-                  {/* Total Spending Summary Card */}
-                  <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-3xl p-5 shadow-lg shadow-indigo-100">
-                    <div className="flex items-center justify-between mb-1 text-indigo-100 text-xs font-medium">
-                      <span className="flex items-center gap-1.5">
+                /* Saved Bills List View with The Royal Gradient Hero Card */
+                <div className="flex-1 flex flex-col pb-24">
+                  {/* The Gorgeous Royal Indigo/Purple Gradient Hero Card */}
+                  <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-indigo-700 text-white rounded-3xl p-5 shadow-xl shadow-indigo-500/20 mb-3 relative overflow-hidden">
+                    {/* Subtle decorative glow circle in corner */}
+                    <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
+                    
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-indigo-100 flex items-center gap-1.5 uppercase tracking-wider">
                         <TrendingUp className="w-3.5 h-3.5" />
                         Total Tracked Spending
                       </span>
-                      <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                      <span className="bg-white/20 backdrop-blur-md px-2.5 py-0.5 rounded-full text-xs font-bold shadow-2xs">
                         {savedBills.length} {savedBills.length === 1 ? 'bill' : 'bills'}
                       </span>
                     </div>
-                    <div className="text-2xl font-black tracking-tight">
+
+                    <div className="text-3xl font-black tracking-tight drop-shadow-xs">
                       {primaryCurrency} {totalSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                   </div>
 
                   {/* Section Title */}
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center justify-between pt-1 pb-2.5 px-1">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                       <Receipt className="w-3.5 h-3.5" />
                       Recent Bills
@@ -271,7 +272,7 @@ export default function App() {
                   </div>
 
                   {/* Scrollable Bills List */}
-                  <div className="space-y-2.5 flex-1">
+                  <div className="space-y-2.5">
                     {savedBills.map((bill) => (
                       <BillCard 
                         key={bill.id} 
@@ -280,11 +281,6 @@ export default function App() {
                       />
                     ))}
                   </div>
-
-                  {/* Fixed Bottom Action: Add Another Bill */}
-                  <div className="sticky bottom-0 pt-2 pb-1 bg-white/90 backdrop-blur-xs">
-                    <ImagePicker onImageSelected={handleImageSelected} />
-                  </div>
                 </div>
               )}
             </>
@@ -292,7 +288,7 @@ export default function App() {
 
           {/* VIEW 2: Image Preview & Analyze Action */}
           {selectedImage && !analysisResult && (
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col pt-2 pb-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Image Preview
@@ -367,19 +363,21 @@ export default function App() {
 
           {/* VIEW 3: Analysis Results (Review & Fix Screen) */}
           {selectedImage && analysisResult && (
-            <BillResult
-              imageDataUrl={selectedImage.dataUrl}
-              analysis={analysisResult}
-              onSave={handleSaveBill}
-              onReset={handleReset}
-            />
+            <div className="flex-1 flex flex-col pt-2 pb-4">
+              <BillResult
+                imageDataUrl={selectedImage.dataUrl}
+                analysis={analysisResult}
+                onSave={handleSaveBill}
+                onReset={handleReset}
+              />
+            </div>
           )}
         </div>
 
-        {/* Footer */}
-        <footer className="px-5 py-3 border-t border-slate-100 text-center bg-white text-xs text-slate-400">
-          Pure White Theme • IndexedDB Offline Storage
-        </footer>
+        {/* Floating Action Button (FAB) - Floating in bottom-right corner */}
+        {!selectedImage && savedBills.length > 0 && (
+          <AddBillFAB onImageSelected={handleImageSelected} />
+        )}
 
         {/* Slide-over Sidebar Drawer */}
         <Sidebar
@@ -387,7 +385,7 @@ export default function App() {
           onClose={() => setIsSidebarOpen(false)}
           activeModel={activeModel}
           onOpenModelSettings={() => setIsSettingsOpen(true)}
-          savedBillsCount={savedBills.length}
+          savedBills={savedBills}
           onClearAllBills={handleClearAllBills}
         />
 
