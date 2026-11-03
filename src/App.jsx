@@ -172,8 +172,8 @@ export default function App() {
       {/* Mobile Screen Container */}
       <main className="w-full max-w-md h-screen sm:h-[844px] bg-white sm:rounded-3xl shadow-xl flex flex-col overflow-hidden relative border border-slate-200/60">
         
-        {/* Header */}
-        <header className="px-4 pt-5 pb-3.5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20">
+        {/* Header (Permanently Fixed Top) */}
+        <header className="px-4 pt-5 pb-3.5 border-b border-slate-100 flex items-center justify-between bg-white shrink-0 z-20">
           <div className="flex items-center gap-2.5">
             {/* 3 Horizontal Lines (Opens Slide-over Sidebar) */}
             <button
@@ -220,32 +220,35 @@ export default function App() {
           </button>
         </header>
 
-        {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto px-4 pt-3 flex flex-col relative">
-          {/* VIEW 1: Initial State (No photo picked yet) */}
-          {!selectedImage && (
-            <>
-              {savedBills.length === 0 ? (
-                /* Empty State: Prompt user to snap first bill */
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
-                  <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
-                    <ReceiptText className="w-8 h-8" />
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-800 mb-1">No bills saved yet</h2>
-                  <p className="text-sm text-slate-500 max-w-xs mb-8">
-                    Take a clear photo of your receipt or select one from your gallery to view and save it.
-                  </p>
-
-                  <div className="w-full max-w-xs">
-                    <ImagePicker onImageSelected={handleImageSelected} />
-                  </div>
+        {/* ============================================================== */}
+        {/* VIEW 1: HOME FEED (When no image is currently being processed) */}
+        {/* ============================================================== */}
+        {!selectedImage && (
+          <>
+            {savedBills.length === 0 ? (
+              /* Empty State when zero bills exist */
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
+                <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                  <ReceiptText className="w-8 h-8" />
                 </div>
-              ) : (
-                /* Saved Bills List View with The Royal Gradient Hero Card */
-                <div className="flex-1 flex flex-col pb-24">
+                <h2 className="text-xl font-bold text-slate-800 mb-1">No bills saved yet</h2>
+                <p className="text-sm text-slate-500 max-w-xs mb-8">
+                  Take a clear photo of your receipt or select one from your gallery to view and save it.
+                </p>
+
+                <div className="w-full max-w-xs">
+                  <ImagePicker onImageSelected={handleImageSelected} />
+                </div>
+              </div>
+            ) : (
+              /* Fixed Dashboard + Scrollable Feed Layout */
+              <div className="flex-1 flex flex-col overflow-hidden relative">
+                
+                {/* 1. FIXED TOP HERO AREA (Never scrolls / Non-movable) */}
+                <div className="px-4 pt-3 pb-2 shrink-0 bg-white z-10">
                   {/* The Gorgeous Royal Indigo/Purple Gradient Hero Card */}
-                  <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-indigo-700 text-white rounded-3xl p-5 shadow-xl shadow-indigo-500/20 mb-3 relative overflow-hidden">
-                    {/* Subtle decorative glow circle in corner */}
+                  <div className="bg-gradient-to-br from-indigo-600 via-indigo-600 to-indigo-700 text-white rounded-3xl p-5 shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+                    {/* Subtle decorative glow in corner */}
                     <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-white/10 blur-xl pointer-events-none" />
                     
                     <div className="flex items-center justify-between mb-2">
@@ -263,120 +266,122 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Section Title */}
-                  <div className="flex items-center justify-between pt-1 pb-2.5 px-1">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  {/* 2. Non-movable "Recent Bills" Title (Invisible container with exact text height) */}
+                  <div className="pt-2.5 pb-1 px-1">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 leading-none">
                       <Receipt className="w-3.5 h-3.5" />
                       Recent Bills
                     </h3>
                   </div>
-
-                  {/* Scrollable Bills List */}
-                  <div className="space-y-2.5">
-                    {savedBills.map((bill) => (
-                      <BillCard 
-                        key={bill.id} 
-                        bill={bill} 
-                        onDelete={handleDeleteBill} 
-                      />
-                    ))}
-                  </div>
                 </div>
-              )}
-            </>
-          )}
 
-          {/* VIEW 2: Image Preview & Analyze Action */}
-          {selectedImage && !analysisResult && (
-            <div className="flex-1 flex flex-col pt-2 pb-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Image Preview
-                </span>
-                <button
-                  disabled={isAnalyzing}
-                  onClick={handleReset}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Cancel
-                </button>
-              </div>
-
-              {/* White Card with Image Preview */}
-              <div className="flex-1 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-center overflow-hidden max-h-[500px] relative">
-                <img
-                  src={selectedImage.dataUrl}
-                  alt="Captured receipt preview"
-                  className={`max-h-full max-w-full object-contain rounded-xl transition ${isAnalyzing ? 'opacity-40 blur-[1px]' : ''}`}
-                />
-
-                {/* Loading Scanner Overlay */}
-                {isAnalyzing && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-white/60 backdrop-blur-[2px]">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200 mb-3 animate-bounce">
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    </div>
-                    <p className="text-sm font-bold text-slate-800">Reading Receipt...</p>
-                    <p className="text-xs text-slate-500 mt-1">Checking bill & extracting details</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Error Alert */}
-              {errorMessage && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700">
-                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-semibold">Error:</span> {errorMessage}
-                  </div>
+                {/* 3. SCROLLABLE BILLS FEED (ONLY the bills scroll!) */}
+                <div className="flex-1 overflow-y-auto px-4 pt-1 pb-24 space-y-2.5">
+                  {savedBills.map((bill) => (
+                    <BillCard 
+                      key={bill.id} 
+                      bill={bill} 
+                      onDelete={handleDeleteBill} 
+                    />
+                  ))}
                 </div>
-              )}
 
-              {/* Analyze Button */}
-              <div className="pt-4">
-                <button
-                  disabled={isAnalyzing || !isEngineReady}
-                  onClick={handleAnalyze}
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-indigo-600 text-white rounded-2xl font-semibold shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition disabled:opacity-50"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : !isEngineReady ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Connecting AI Engine...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5" />
-                      Analyze Bill
-                    </>
-                  )}
-                </button>
+                {/* 4. Floating Action Button (FAB) */}
+                <AddBillFAB onImageSelected={handleImageSelected} />
               </div>
+            )}
+          </>
+        )}
+
+        {/* ============================================================== */}
+        {/* VIEW 2: Image Preview & Analyze Screen */}
+        {/* ============================================================== */}
+        {selectedImage && !analysisResult && (
+          <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Image Preview
+              </span>
+              <button
+                disabled={isAnalyzing}
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Cancel
+              </button>
             </div>
-          )}
 
-          {/* VIEW 3: Analysis Results (Review & Fix Screen) */}
-          {selectedImage && analysisResult && (
-            <div className="flex-1 flex flex-col pt-2 pb-4">
-              <BillResult
-                imageDataUrl={selectedImage.dataUrl}
-                analysis={analysisResult}
-                onSave={handleSaveBill}
-                onReset={handleReset}
+            {/* White Card with Image Preview */}
+            <div className="flex-1 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-center overflow-hidden max-h-[500px] relative">
+              <img
+                src={selectedImage.dataUrl}
+                alt="Captured receipt preview"
+                className={`max-h-full max-w-full object-contain rounded-xl transition ${isAnalyzing ? 'opacity-40 blur-[1px]' : ''}`}
               />
-            </div>
-          )}
-        </div>
 
-        {/* Floating Action Button (FAB) - Floating in bottom-right corner */}
-        {!selectedImage && savedBills.length > 0 && (
-          <AddBillFAB onImageSelected={handleImageSelected} />
+              {/* Loading Scanner Overlay */}
+              {isAnalyzing && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-white/60 backdrop-blur-[2px]">
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200 mb-3 animate-bounce">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-800">Reading Receipt...</p>
+                  <p className="text-xs text-slate-500 mt-1">Checking bill & extracting details</p>
+                </div>
+              )}
+            </div>
+
+            {/* Error Alert */}
+            {errorMessage && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700">
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-semibold">Error:</span> {errorMessage}
+                </div>
+              </div>
+            )}
+
+            {/* Analyze Button */}
+            <div className="pt-4">
+              <button
+                disabled={isAnalyzing || !isEngineReady}
+                onClick={handleAnalyze}
+                className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-indigo-600 text-white rounded-2xl font-semibold shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition disabled:opacity-50"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : !isEngineReady ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Connecting AI Engine...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Analyze Bill
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* VIEW 3: Analysis Results (Review & Fix Screen) */}
+        {/* ============================================================== */}
+        {selectedImage && analysisResult && (
+          <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 flex flex-col">
+            <BillResult
+              imageDataUrl={selectedImage.dataUrl}
+              analysis={analysisResult}
+              onSave={handleSaveBill}
+              onReset={handleReset}
+            />
+          </div>
         )}
 
         {/* Slide-over Sidebar Drawer */}
