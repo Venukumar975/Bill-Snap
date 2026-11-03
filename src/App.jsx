@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { ReceiptText, RotateCcw, Sparkles, Loader2, AlertCircle, Cpu, Menu, RefreshCw } from 'lucide-react';
+import { 
+  ReceiptText, 
+  RotateCcw, 
+  Sparkles, 
+  Loader2, 
+  AlertCircle, 
+  Cpu, 
+  Menu, 
+  RefreshCw,
+  Plus,
+  TrendingUp,
+  Receipt
+} from 'lucide-react';
 import ImagePicker from './components/ImagePicker';
 import BillResult from './components/BillResult';
+import BillCard from './components/BillCard';
 import SettingsModal from './components/SettingsModal';
 import Sidebar from './components/Sidebar';
 import { extractBillData } from './services/ai';
 import { initModelEngine, getCachedModels, refreshModelEngine } from './services/modelManager';
+import { saveBill, getAllBills, deleteBill, clearAllBills } from './services/storage';
 
 export default function App() {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -13,7 +27,11 @@ export default function App() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // Model Engine & UI Navigation State
+  // Saved Bills State (from IndexedDB)
+  const [savedBills, setSavedBills] = useState([]);
+  const [isLoadingBills, setIsLoadingBills] = useState(true);
+
+  // Model Engine & Navigation State
   const [activeModel, setActiveModel] = useState(null);
   const [fallbackModels, setFallbackModels] = useState([]);
   const [isEngineReady, setIsEngineReady] = useState(false);
@@ -21,12 +39,26 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRefreshingEngine, setIsRefreshingEngine] = useState(false);
 
-  // Background Model Engine Initialization
+  // Load Saved Bills from IndexedDB on startup
+  useEffect(() => {
+    async function loadBills() {
+      try {
+        const bills = await getAllBills();
+        setSavedBills(bills);
+      } catch (err) {
+        console.error('Failed to load bills from IndexedDB:', err);
+      } finally {
+        setIsLoadingBills(false);
+      }
+    }
+    loadBills();
+  }, []);
+
+  // Background Model Engine Initialization (using localStorage cache)
   useEffect(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) return;
 
-    // Check 7-day cache first (instant hit)
     const cached = getCachedModels(apiKey);
     if (cached && cached.length > 0) {
       setActiveModel(cached[0]);
@@ -35,7 +67,6 @@ export default function App() {
       return;
     }
 
-    // Otherwise, discover in background without blocking user
     initModelEngine(
       apiKey,
       (firstModel) => {
@@ -44,7 +75,6 @@ export default function App() {
       },
       (allModels) => {
         setFallbackModels(allModels);
-        console.log('[App] All fallback models ready:', allModels);
       }
     ).catch((err) => {
       console.warn('[App] Engine init warning:', err.message);
@@ -59,12 +89,8 @@ export default function App() {
     try {
       const refreshed = await refreshModelEngine(
         apiKey,
-        (firstModel) => {
-          setActiveModel(firstModel);
-        },
-        (allModels) => {
-          setFallbackModels(allModels);
-        }
+        (firstModel) => setActiveModel(firstModel),
+        (allModels) => setFallbackModels(allModels)
       );
       if (refreshed && refreshed.length > 0) {
         setActiveModel(refreshed[0]);
@@ -109,10 +135,40 @@ export default function App() {
     }
   };
 
-  const handleSaveBill = (billData) => {
-    alert(`Saved bill: ${billData.merchant} - ${billData.currency}${billData.totalAmount}`);
-    handleReset();
+  // Real Save to IndexedDB
+  const handleSaveBill = async (billData) => {
+    try {
+      const saved = await saveBill(billData);
+      setSavedBills((prev) => [saved, ...prev.filter((b) => b.id !== saved.id)]);
+      handleReset();
+    } catch (err) {
+      alert(`Failed to save bill: ${err.message}`);
+    }
   };
+
+  // Delete from IndexedDB
+  const handleDeleteBill = async (id) => {
+    try {
+      await deleteBill(id);
+      setSavedBills((prev) => prev.filter((b) => b.id !== id));
+    } catch (err) {
+      alert(`Failed to delete bill: ${err.message}`);
+    }
+  };
+
+  // Clear all bills from IndexedDB
+  const handleClearAllBills = async () => {
+    try {
+      await clearAllBills();
+      setSavedBills([]);
+    } catch (err) {
+      alert(`Failed to clear bills: ${err.message}`);
+    }
+  };
+
+  // Calculate Total Spending
+  const totalSpend = savedBills.reduce((acc, curr) => acc + (Number(curr.totalAmount) || 0), 0);
+  const primaryCurrency = savedBills[0]?.currency || '₹';
 
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center items-center sm:p-4">
@@ -143,7 +199,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Dynamic Model Status Pill with Real-time "Checking..." Feedback */}
+          {/* Dynamic Model Status Pill */}
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 transition active:scale-95"
@@ -151,7 +207,7 @@ export default function App() {
             {isRefreshingEngine ? (
               <>
                 <RefreshCw className="w-3 h-3 text-indigo-600 animate-spin" />
-                <span className="text-indigo-600">Checking...</span>
+                <span className="text-indigo-600 font-bold">Checking...</span>
               </>
             ) : isEngineReady && activeModel ? (
               <>
@@ -168,25 +224,73 @@ export default function App() {
         </header>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col">
-          {/* View 1: Initial Empty / Pick View */}
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+          {/* VIEW 1: Initial State (No photo picked yet) */}
           {!selectedImage && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
-                <ReceiptText className="w-8 h-8" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-800 mb-1">Snap or pick a bill</h2>
-              <p className="text-sm text-slate-500 max-w-xs mb-8">
-                Take a clear photo of your receipt or select one from your gallery to view it instantly.
-              </p>
+            <>
+              {savedBills.length === 0 ? (
+                /* Empty State: Prompt user to snap their first bill */
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                    <ReceiptText className="w-8 h-8" />
+                  </div>
+                  <h2 className="text-xl font-bold text-slate-800 mb-1">No bills saved yet</h2>
+                  <p className="text-sm text-slate-500 max-w-xs mb-8">
+                    Take a clear photo of your receipt or select one from your gallery to view and save it.
+                  </p>
 
-              <div className="w-full max-w-xs">
-                <ImagePicker onImageSelected={handleImageSelected} />
-              </div>
-            </div>
+                  <div className="w-full max-w-xs">
+                    <ImagePicker onImageSelected={handleImageSelected} />
+                  </div>
+                </div>
+              ) : (
+                /* Saved Bills List View (Home Screen Feed) */
+                <div className="flex-1 flex flex-col space-y-4">
+                  {/* Total Spending Summary Card */}
+                  <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-3xl p-5 shadow-lg shadow-indigo-100">
+                    <div className="flex items-center justify-between mb-1 text-indigo-100 text-xs font-medium">
+                      <span className="flex items-center gap-1.5">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        Total Tracked Spending
+                      </span>
+                      <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                        {savedBills.length} {savedBills.length === 1 ? 'bill' : 'bills'}
+                      </span>
+                    </div>
+                    <div className="text-2xl font-black tracking-tight">
+                      {primaryCurrency} {totalSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </div>
+
+                  {/* Section Title */}
+                  <div className="flex items-center justify-between pt-1">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <Receipt className="w-3.5 h-3.5" />
+                      Recent Bills
+                    </h3>
+                  </div>
+
+                  {/* Scrollable Bills List */}
+                  <div className="space-y-2.5 flex-1">
+                    {savedBills.map((bill) => (
+                      <BillCard 
+                        key={bill.id} 
+                        bill={bill} 
+                        onDelete={handleDeleteBill} 
+                      />
+                    ))}
+                  </div>
+
+                  {/* Fixed Bottom Action: Add Another Bill */}
+                  <div className="sticky bottom-0 pt-2 pb-1 bg-white/90 backdrop-blur-xs">
+                    <ImagePicker onImageSelected={handleImageSelected} />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
-          {/* View 2: Image Preview & Analyze Action */}
+          {/* VIEW 2: Image Preview & Analyze Action */}
           {selectedImage && !analysisResult && (
             <div className="flex-1 flex flex-col">
               <div className="flex items-center justify-between mb-3">
@@ -199,7 +303,7 @@ export default function App() {
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  Change
+                  Cancel
                 </button>
               </div>
 
@@ -223,7 +327,7 @@ export default function App() {
                 )}
               </div>
 
-              {/* Error Message if API fails */}
+              {/* Error Alert */}
               {errorMessage && (
                 <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700">
                   <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
@@ -261,7 +365,7 @@ export default function App() {
             </div>
           )}
 
-          {/* View 3: Analysis Results (Review & Fix Screen) */}
+          {/* VIEW 3: Analysis Results (Review & Fix Screen) */}
           {selectedImage && analysisResult && (
             <BillResult
               imageDataUrl={selectedImage.dataUrl}
@@ -274,7 +378,7 @@ export default function App() {
 
         {/* Footer */}
         <footer className="px-5 py-3 border-t border-slate-100 text-center bg-white text-xs text-slate-400">
-          Pure White Theme • Modular Architecture
+          Pure White Theme • IndexedDB Offline Storage
         </footer>
 
         {/* Slide-over Sidebar Drawer */}
@@ -283,6 +387,8 @@ export default function App() {
           onClose={() => setIsSidebarOpen(false)}
           activeModel={activeModel}
           onOpenModelSettings={() => setIsSettingsOpen(true)}
+          savedBillsCount={savedBills.length}
+          onClearAllBills={handleClearAllBills}
         />
 
         {/* Settings / Model Queue Modal */}

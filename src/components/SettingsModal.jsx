@@ -131,7 +131,7 @@ export default function SettingsModal({
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl font-semibold text-xs hover:bg-slate-50 active:scale-95 transition shadow-sm disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`} />
-            {isRefreshing ? 'Re-testing Models...' : 'Re-test & Refresh Engine'}
+            {isRefreshing ? 'Refreshing Engine...' : 'Refresh Engine'}
           </button>
 
           <button

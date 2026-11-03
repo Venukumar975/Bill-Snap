@@ -4,17 +4,19 @@ import {
   Cpu, 
   KeyRound, 
   HardDrive, 
-  Info, 
   ReceiptText,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Trash2
 } from 'lucide-react';
 
 export default function Sidebar({
   isOpen,
   onClose,
   activeModel,
-  onOpenModelSettings
+  onOpenModelSettings,
+  savedBillsCount = 0,
+  onClearAllBills
 }) {
   if (!isOpen) return null;
 
@@ -48,7 +50,7 @@ export default function Sidebar({
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <div className="flex-1 p-4 space-y-3 overflow-y-auto">
           {/* Section 1: AI Engine & Models */}
           <button
             onClick={() => {
@@ -88,15 +90,35 @@ export default function Sidebar({
             />
           </div>
 
-          {/* Section 3: On-Device Storage Info */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1">
-            <div className="flex items-center gap-2 text-slate-700">
-              <HardDrive className="w-4 h-4 text-slate-500" />
-              <span className="text-xs font-bold text-slate-800">Local Device Storage</span>
+          {/* Section 3: On-Device Storage (IndexedDB) */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-700">
+                <HardDrive className="w-4 h-4 text-slate-500" />
+                <span className="text-xs font-bold text-slate-800">IndexedDB Storage</span>
+              </div>
+              <span className="text-[11px] font-bold text-indigo-600 bg-white px-2 py-0.5 rounded-md border border-slate-200/80">
+                {savedBillsCount} {savedBillsCount === 1 ? 'bill' : 'bills'}
+              </span>
             </div>
-            <p className="text-[11px] text-slate-500">
-              Saved bills and model cache stay securely on your phone.
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Saved bills and receipt photos are stored directly inside phone storage with no 5MB limit.
             </p>
+
+            {savedBillsCount > 0 && (
+              <button
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to delete all saved bills?')) {
+                    onClearAllBills();
+                    onClose();
+                  }
+                }}
+                className="w-full inline-flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition border border-red-200/60 bg-white"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Clear All Saved Bills
+              </button>
+            )}
           </div>
         </div>
 
