@@ -13,6 +13,14 @@ let inferenceSession = null;
 let isInitializing = false;
 let modelLoadFailed = false;
 
+// Auto-reset failure flag when internet connection is restored
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    modelLoadFailed = false;
+    console.log('🌐 [On-Device AI] Internet restored. Local model initialization re-enabled.');
+  });
+}
+
 /**
  * Gets the active ONNX Runtime instance (from window.ort CDN or bundler import).
  */
@@ -46,8 +54,14 @@ export async function initLocalModel() {
     console.log('✅ [On-Device AI] MobileNetV3 session initialized successfully.');
     return inferenceSession;
   } catch (err) {
-    console.warn('⚠️ [On-Device AI] Failed to load local ONNX model, falling back to direct cloud processing:', err);
-    modelLoadFailed = true;
+    const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+    if (isOffline) {
+      console.log('ℹ️ [On-Device AI] Offline — skipping model download for now. Will auto-retry on reconnect.');
+      // Do not lock failure flag when offline so it retries automatically once internet is back
+    } else {
+      console.warn('⚠️ [On-Device AI] Failed to load local ONNX model, falling back to direct cloud processing:', err);
+      modelLoadFailed = true;
+    }
     return null;
   } finally {
     isInitializing = false;
