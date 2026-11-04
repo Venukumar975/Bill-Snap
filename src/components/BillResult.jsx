@@ -8,7 +8,8 @@ import {
   Tag, 
   RotateCcw, 
   Save, 
-  HelpCircle 
+  HelpCircle,
+  Zap
 } from 'lucide-react';
 
 export default function BillResult({ 
@@ -87,6 +88,20 @@ export default function BillResult({
   return (
     <form onSubmit={handleSaveSubmit} className="flex-1 flex flex-col justify-between overflow-y-auto">
       <div className="space-y-4 pb-4">
+        {/* Pipeline Origin Badge (Edge + Cloud) */}
+        {analysis?._localVerification && !analysis._localVerification.bypassed && (
+          <div className="flex items-center justify-between px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-[11px] text-slate-600">
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="font-semibold text-slate-700">Pipeline:</span>
+              <span>Edge-Verified (MobileNetV3)</span>
+            </div>
+            <span className="font-mono text-[10px] text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">
+              {analysis._localVerification.latencyMs}ms
+            </span>
+          </div>
+        )}
+
         {/* Confidence Notice Banner */}
         {hasUnsure ? (
           <div className="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-3 flex items-start gap-2.5">

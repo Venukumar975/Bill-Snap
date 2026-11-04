@@ -13,7 +13,8 @@ import {
   EyeOff,
   Check,
   AlertCircle,
-  Loader2
+  Loader2,
+  Zap
 } from 'lucide-react';
 import { calculateBillsStorageSize, exportBillsToCSV } from '../services/storage';
 import { 
@@ -22,6 +23,7 @@ import {
   clearActiveApiKey, 
   testGeminiApiKey 
 } from '../services/apiKeyManager';
+import { isLocalModelEnabled, setLocalModelEnabled } from '../services/localModelService';
 
 export default function Sidebar({
   isOpen,
@@ -42,14 +44,21 @@ export default function Sidebar({
   const [showApiKey, setShowApiKey] = useState(false);
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [keyFeedback, setKeyFeedback] = useState(null); // { type: 'success' | 'error', text: '' }
+  const [localModelActive, setLocalModelActive] = useState(true);
 
-  // Sync API key state on open
+  // Sync API key & Local Model state on open
   useEffect(() => {
     if (isOpen) {
       setApiKeyInput(getActiveApiKey());
       setKeyFeedback(null);
+      setLocalModelActive(isLocalModelEnabled());
     }
   }, [isOpen]);
+
+  const handleToggleLocalModel = (nextVal) => {
+    setLocalModelActive(nextVal);
+    setLocalModelEnabled(nextVal);
+  };
 
   // Calculate storage size directly from bills array
   const storageUsage = calculateBillsStorageSize(savedBills);
@@ -251,26 +260,88 @@ export default function Sidebar({
           </div>
 
           {/* SECTION 3: AI Engine & Models */}
-          <button
-            onClick={() => {
-              onClose();
-              onOpenModelSettings();
-            }}
-            className="w-full flex items-center justify-between p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 hover:bg-indigo-50 text-left transition group active:scale-98"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-white border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs">
-                <Cpu className="w-4 h-4" />
+          <div className="space-y-2">
+            <button
+              onClick={() => {
+                onClose();
+                onOpenModelSettings();
+              }}
+              className="w-full flex items-center justify-between p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 hover:bg-indigo-50 text-left transition group active:scale-98"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs">
+                  <Cpu className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900">AI Engine & Models</p>
+                  <p className="text-[11px] text-indigo-600 font-medium truncate max-w-[130px]">
+                    {activeModel ? activeModel.replace('gemini-', '') : 'Connecting...'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-bold text-slate-900">AI Engine & Models</p>
-                <p className="text-[11px] text-indigo-600 font-medium truncate max-w-[130px]">
-                  {activeModel ? activeModel.replace('gemini-', '') : 'Connecting...'}
-                </p>
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" />
+            </button>
+
+            {/* Modernized On-Device Smart Pre-filter */}
+            <div className={`p-3.5 rounded-2xl border transition-all duration-200 ${
+              localModelActive 
+                ? 'bg-emerald-50/40 border-emerald-200/80' 
+                : 'bg-slate-50 border-slate-200/80'
+            }`}>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-start gap-2.5">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition shadow-2xs ${
+                    localModelActive 
+                      ? 'bg-emerald-500 text-white shadow-emerald-200' 
+                      : 'bg-slate-200 text-slate-500'
+                  }`}>
+                    <Zap className="w-4 h-4 fill-current" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-xs font-bold text-slate-900">Smart Pre-Filter</p>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border transition ${
+                        localModelActive 
+                          ? 'text-emerald-700 bg-emerald-100/70 border-emerald-300' 
+                          : 'text-slate-500 bg-slate-100 border-slate-200'
+                      }`}>
+                        {localModelActive ? 'Saves API Tokens' : 'Disabled'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                      {localModelActive 
+                        ? 'Checks bills on phone in 15ms so you never waste API tokens.' 
+                        : 'All photos sent straight to cloud without local check.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Modern Switch with State Color (Green = ON, Slate = OFF) */}
+                <div className="flex flex-col items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={localModelActive}
+                    onClick={() => handleToggleLocalModel(!localModelActive)}
+                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out focus:outline-none cursor-pointer ${
+                      localModelActive ? 'bg-emerald-500' : 'bg-slate-300'
+                    }`}
+                  >
+                    <div
+                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                        localModelActive ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                  <span className={`text-[9px] font-extrabold font-mono transition ${
+                    localModelActive ? 'text-emerald-600' : 'text-slate-400'
+                  }`}>
+                    {localModelActive ? 'ON' : 'OFF'}
+                  </span>
+                </div>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" />
-          </button>
+          </div>
 
           {/* SECTION 4: API Key Configuration (BYOK - Bring Your Own Key) */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2.5">
