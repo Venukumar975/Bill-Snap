@@ -26,13 +26,16 @@ export default function AddBillFAB({ onImageSelected }) {
   return (
     <>
       {/* Hidden Native File Inputs */}
+      {/* 1. Dedicated Camera Input (Launches rear camera directly) */}
       <input
         ref={cameraInputRef}
         type="file"
         accept="image/*"
+        capture="environment"
         className="hidden"
         onChange={handleFileChange}
       />
+      {/* 2. Dedicated Gallery / File Picker */}
       <input
         ref={galleryInputRef}
         type="file"

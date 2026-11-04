@@ -9,7 +9,11 @@ import {
   Menu, 
   RefreshCw,
   TrendingUp,
-  Receipt
+  Receipt,
+  PieChart,
+  ChevronRight,
+  X,
+  KeyRound
 } from 'lucide-react';
 import ImagePicker from './components/ImagePicker';
 import AddBillFAB from './components/AddBillFAB';
@@ -17,9 +21,11 @@ import BillResult from './components/BillResult';
 import BillCard from './components/BillCard';
 import SettingsModal from './components/SettingsModal';
 import Sidebar from './components/Sidebar';
+import CategoryBreakdownModal from './components/CategoryBreakdownModal';
 import { extractBillData } from './services/ai';
 import { initModelEngine, getCachedModels, refreshModelEngine } from './services/modelManager';
 import { saveBill, getAllBills, deleteBill, clearAllBills } from './services/storage';
+import { getActiveApiKey } from './services/apiKeyManager';
 
 export default function App() {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -38,6 +44,8 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRefreshingEngine, setIsRefreshingEngine] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState(null);
 
   // Load Saved Bills from IndexedDB on startup
   useEffect(() => {
@@ -54,10 +62,13 @@ export default function App() {
     loadBills();
   }, []);
 
-  // Background Model Engine Initialization
+  // Background Model Engine Initialization (Reads strictly from localStorage BYOK)
   useEffect(() => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) return;
+    const apiKey = getActiveApiKey();
+    if (!apiKey) {
+      setIsEngineReady(false);
+      return;
+    }
 
     const cached = getCachedModels(apiKey);
     if (cached && cached.length > 0) {
@@ -82,8 +93,11 @@ export default function App() {
   }, []);
 
   const handleManualRefreshEngine = async () => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) return;
+    const apiKey = getActiveApiKey();
+    if (!apiKey) {
+      alert('Please enter your Gemini API key in the sidebar menu first.');
+      return;
+    }
 
     setIsRefreshingEngine(true);
     try {
@@ -98,6 +112,33 @@ export default function App() {
       }
     } catch (err) {
       alert(`Refresh failed: ${err.message}`);
+    } finally {
+      setIsRefreshingEngine(false);
+    }
+  };
+
+  const handleApiKeyChange = async (newKey) => {
+    if (!newKey) {
+      setActiveModel(null);
+      setFallbackModels([]);
+      setIsEngineReady(false);
+      return;
+    }
+
+    setIsRefreshingEngine(true);
+    try {
+      await initModelEngine(
+        newKey,
+        (firstModel) => {
+          setActiveModel(firstModel);
+          setIsEngineReady(true);
+        },
+        (allModels) => {
+          setFallbackModels(allModels);
+        }
+      );
+    } catch (err) {
+      console.warn('Engine init with new key failed:', err.message);
     } finally {
       setIsRefreshingEngine(false);
     }
@@ -163,9 +204,12 @@ export default function App() {
     }
   };
 
-  // Calculate Total Spending
+  // Calculate Total Spending & Filtered Bills
   const totalSpend = savedBills.reduce((acc, curr) => acc + (Number(curr.totalAmount) || 0), 0);
   const primaryCurrency = savedBills[0]?.currency || '₹';
+  const displayBills = activeCategoryFilter 
+    ? savedBills.filter((b) => (b.category || 'Other') === activeCategoryFilter)
+    : savedBills;
 
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center items-center sm:p-4">
@@ -186,8 +230,14 @@ export default function App() {
 
             {/* Bill Snap Logo & Title */}
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
-                <ReceiptText className="w-4 h-4" />
+              <div className="relative w-8 h-8 rounded-xl overflow-hidden shadow-md shadow-indigo-100/50 shrink-0">
+                <img 
+                  src="/favicon.png" 
+                  alt="Bill Snap" 
+                  className="w-full h-full object-cover" 
+                />
+                {/* Live Scanning Laser Beam */}
+                <div className="absolute inset-x-0 top-0 h-[2px] bg-cyan-400 shadow-[0_0_8px_#22d3ee] pointer-events-none animate-scan-laser" />
               </div>
               <div>
                 <h1 className="text-base font-bold text-slate-900 leading-tight">Bill Snap</h1>
@@ -198,7 +248,7 @@ export default function App() {
 
           {/* Dynamic Model Status Pill */}
           <button
-            onClick={() => setIsSettingsOpen(true)}
+            onClick={() => (activeModel ? setIsSettingsOpen(true) : setIsSidebarOpen(true))}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 transition active:scale-95"
           >
             {isRefreshingEngine ? (
@@ -213,8 +263,8 @@ export default function App() {
               </>
             ) : (
               <>
-                <Cpu className="w-3 h-3 text-slate-400" />
-                <span className="text-slate-400">Connecting...</span>
+                <KeyRound className="w-3 h-3 text-amber-500" />
+                <span className="text-amber-700 font-semibold">Set API Key</span>
               </>
             )}
           </button>
@@ -264,26 +314,62 @@ export default function App() {
                     <div className="text-3xl font-black tracking-tight drop-shadow-xs">
                       {primaryCurrency} {totalSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
+
+                    {/* Category Breakdown Trigger Pill */}
+                    <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-white/15">
+                      <span className="text-[11px] text-indigo-100 font-medium">
+                        {new Set(savedBills.map((b) => b.category || 'Other')).size} categories tracked
+                      </span>
+                      <button
+                        onClick={() => setIsCategoryModalOpen(true)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 active:scale-95 backdrop-blur-md rounded-full text-[11px] font-bold text-white transition shadow-2xs cursor-pointer"
+                      >
+                        <PieChart className="w-3.5 h-3.5" />
+                        <span>By Category</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* 2. Non-movable "Recent Bills" Title (Invisible container with exact text height) */}
-                  <div className="pt-2.5 pb-1 px-1">
+                  <div className="pt-2.5 pb-1 px-1 flex items-center justify-between">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 leading-none">
                       <Receipt className="w-3.5 h-3.5" />
-                      Recent Bills
+                      {activeCategoryFilter ? `${activeCategoryFilter} (${displayBills.length})` : 'Recent Bills'}
                     </h3>
+                    {activeCategoryFilter && (
+                      <button
+                        onClick={() => setActiveCategoryFilter(null)}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-full transition active:scale-95"
+                      >
+                        <span>Show All</span>
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 {/* 3. SCROLLABLE BILLS FEED (ONLY the bills scroll!) */}
                 <div className="flex-1 overflow-y-auto px-4 pt-1 pb-24 space-y-2.5">
-                  {savedBills.map((bill) => (
-                    <BillCard 
-                      key={bill.id} 
-                      bill={bill} 
-                      onDelete={handleDeleteBill} 
-                    />
-                  ))}
+                  {displayBills.length === 0 ? (
+                    <div className="text-center py-8 px-4 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      <p className="text-xs font-bold text-slate-600">No bills found in {activeCategoryFilter}</p>
+                      <button
+                        onClick={() => setActiveCategoryFilter(null)}
+                        className="mt-2 text-xs font-semibold text-indigo-600 hover:underline"
+                      >
+                        View all {savedBills.length} bills
+                      </button>
+                    </div>
+                  ) : (
+                    displayBills.map((bill) => (
+                      <BillCard 
+                        key={bill.id} 
+                        bill={bill} 
+                        onDelete={handleDeleteBill} 
+                      />
+                    ))
+                  )}
                 </div>
 
                 {/* 4. Floating Action Button (FAB) */}
@@ -392,6 +478,7 @@ export default function App() {
           onOpenModelSettings={() => setIsSettingsOpen(true)}
           savedBills={savedBills}
           onClearAllBills={handleClearAllBills}
+          onApiKeyUpdated={handleApiKeyChange}
         />
 
         {/* Settings / Model Queue Modal */}
@@ -402,6 +489,15 @@ export default function App() {
           fallbackModels={fallbackModels}
           onRefreshEngine={handleManualRefreshEngine}
           isRefreshing={isRefreshingEngine}
+        />
+
+        {/* Category Spending Breakdown Modal */}
+        <CategoryBreakdownModal
+          isOpen={isCategoryModalOpen}
+          onClose={() => setIsCategoryModalOpen(false)}
+          bills={savedBills}
+          onSelectCategory={(cat) => setActiveCategoryFilter(cat)}
+          activeFilterCategory={activeCategoryFilter}
         />
       </main>
     </div>

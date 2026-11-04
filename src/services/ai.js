@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getCachedModels, flushDeadModel, initModelEngine } from './modelManager';
+import { getActiveApiKey } from './apiKeyManager';
 
 /**
  * Extracts receipt information using the active model with automatic failover.
@@ -9,10 +10,10 @@ import { getCachedModels, flushDeadModel, initModelEngine } from './modelManager
  * - If 429 (rate limit), temporarily tries next model without flushing
  */
 export async function extractBillData(base64DataUrl, customApiKey = null) {
-  const apiKey = customApiKey || import.meta.env.VITE_GEMINI_API_KEY;
+  const apiKey = customApiKey || getActiveApiKey();
 
-  if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-    throw new Error('Gemini API key is missing. Please configure VITE_GEMINI_API_KEY in .env');
+  if (!apiKey) {
+    throw new Error('Gemini API key is missing. Please enter your API key in the sidebar menu.');
   }
 
   // Parse MIME type and raw base64 data

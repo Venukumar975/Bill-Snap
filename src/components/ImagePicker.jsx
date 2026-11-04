@@ -26,11 +26,12 @@ export default function ImagePicker({ onImageSelected }) {
 
   return (
     <div className="w-full">
-      {/* 1. Camera Input without aggressive capture flag to avoid Android LMK memory kills */}
+      {/* 1. Camera Input with direct environment capture */}
       <input
         ref={cameraInputRef}
         type="file"
         accept="image/*"
+        capture="environment"
         className="hidden"
         onChange={handleFileChange}
       />
