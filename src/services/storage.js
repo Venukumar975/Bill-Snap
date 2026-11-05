@@ -7,6 +7,8 @@
  * - CSV export with date filtering
  */
 
+import * as XLSX from 'xlsx';
+
 const DB_NAME = 'BillSnapDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'bills';
@@ -194,6 +196,58 @@ export function exportBillsToCSV(bills, startDate = null, endDate = null) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+
+  return filtered.length;
+}
+
+/**
+ * Exports bills to a native Excel (.xlsx) file with optional date filtering
+ */
+export function exportBillsToExcel(bills, startDate = null, endDate = null) {
+  let filtered = [...bills];
+
+  if (startDate) {
+    filtered = filtered.filter(b => b.date >= startDate);
+  }
+  if (endDate) {
+    filtered = filtered.filter(b => b.date <= endDate);
+  }
+
+  if (filtered.length === 0) {
+    throw new Error('No bills found within the selected date range.');
+  }
+
+  const data = filtered.map(b => ({
+    'Bill ID': b.id,
+    'Date': b.date,
+    'Merchant': b.merchant || 'Unknown',
+    'Category': b.category || 'Other',
+    'Total Amount': Number(b.totalAmount || 0),
+    'Currency': b.currency || '₹',
+    'Saved At': b.createdAt || ''
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+
+  // Set professional column widths
+  worksheet['!cols'] = [
+    { wch: 18 }, // Bill ID
+    { wch: 12 }, // Date
+    { wch: 25 }, // Merchant
+    { wch: 15 }, // Category
+    { wch: 15 }, // Total Amount
+    { wch: 10 }, // Currency
+    { wch: 22 }  // Saved At
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Bills');
+
+  const fileName = startDate && endDate 
+    ? `bills_${startDate}_to_${endDate}.xlsx`
+    : `bills_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+  XLSX.writeFile(workbook, fileName);
 
   return filtered.length;
 }
