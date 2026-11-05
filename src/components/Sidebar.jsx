@@ -41,6 +41,7 @@ export default function Sidebar({
 
   // BYOK (Bring Your Own Key) State
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [isKeyVerified, setIsKeyVerified] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [keyFeedback, setKeyFeedback] = useState(null); // { type: 'success' | 'error', text: '' }
@@ -52,6 +53,7 @@ export default function Sidebar({
     if (isOpen) {
       const currentKey = getActiveApiKey();
       setApiKeyInput(currentKey);
+      setIsKeyVerified(Boolean(currentKey));
       setKeyFeedback(null);
       setLocalModelActive(isLocalModelEnabled());
       setIsEditingKey(!currentKey); // Auto-expand only if no key exists yet!
@@ -86,6 +88,7 @@ export default function Sidebar({
     const trimmed = apiKeyInput.trim();
     if (!trimmed) {
       clearActiveApiKey();
+      setIsKeyVerified(false);
       setKeyFeedback({ type: 'error', text: 'Please enter a valid Gemini API key' });
       return;
     }
@@ -96,6 +99,7 @@ export default function Sidebar({
     try {
       await testGeminiApiKey(trimmed);
       setActiveApiKey(trimmed);
+      setIsKeyVerified(true);
       setKeyFeedback({ type: 'success', text: 'Key verified & saved to phone!' });
       setIsEditingKey(false);
       if (onApiKeyUpdated) {
@@ -103,6 +107,7 @@ export default function Sidebar({
       }
       setTimeout(() => setKeyFeedback(null), 4000);
     } catch (err) {
+      setIsKeyVerified(false);
       setKeyFeedback({ type: 'error', text: err.message || 'Invalid API key' });
     } finally {
       setIsTestingKey(false);
@@ -112,6 +117,7 @@ export default function Sidebar({
   const handleClearKey = () => {
     clearActiveApiKey();
     setApiKeyInput('');
+    setIsKeyVerified(false);
     setKeyFeedback({ type: 'success', text: 'API key removed from device.' });
     if (onApiKeyUpdated) {
       onApiKeyUpdated('');
@@ -312,36 +318,44 @@ export default function Sidebar({
 
             {/* ROW 3: Gemini API Key (Progressive Disclosure) */}
             <div className="p-3.5 space-y-2.5 bg-slate-50/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center shadow-2xs">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition shadow-2xs ${
+                    isKeyVerified 
+                      ? 'bg-emerald-500 text-white shadow-emerald-200' 
+                      : 'bg-slate-200 text-slate-500'
+                  }`}>
                     <KeyRound className="w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Gemini API Key</p>
-                    <p className="text-[11px] text-slate-400 font-medium">BYOK • On-Device</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-900 whitespace-nowrap">Gemini API Key</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {isKeyVerified ? (
+                        <>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-300 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
+                            <Check className="w-2.5 h-2.5" />
+                            Verified
+                          </span>
+                          <span className="text-[11px] text-emerald-600 font-semibold truncate">
+                            Connected
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[11px] text-slate-500 font-medium">
+                          Key required
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  {apiKeyInput ? (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <Check className="w-3 h-3" />
-                      Verified
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                      Required
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingKey(!isEditingKey)}
-                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50/70 border border-indigo-100 hover:bg-indigo-100 px-2.5 py-1 rounded-md transition active:scale-95"
-                  >
-                    {isEditingKey ? 'Close' : 'Change'}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingKey(!isEditingKey)}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50/80 border border-indigo-100 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition active:scale-95 shrink-0"
+                >
+                  {isEditingKey ? 'Close' : (isKeyVerified ? 'Change' : 'Add Key')}
+                </button>
               </div>
 
               {/* Progressively Disclosed Input Form */}
@@ -388,7 +402,7 @@ export default function Sidebar({
                         </>
                       )}
                     </button>
-                    {apiKeyInput && (
+                    {(apiKeyInput || isKeyVerified) && (
                       <button
                         type="button"
                         onClick={handleClearKey}
@@ -428,17 +442,17 @@ export default function Sidebar({
               <span className="text-[11px] font-mono font-semibold text-slate-400">IndexedDB</span>
             </div>
 
-            {/* Compact Side-by-Side Stat Containers */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-white rounded-xl py-2 px-3 border border-slate-200/80 flex items-center justify-between shadow-2xs">
+            {/* Asymmetric Side-by-Side Stat Containers */}
+            <div className="flex items-center gap-2">
+              <div className="w-[38%] bg-white rounded-xl py-2 px-3 border border-slate-200/80 flex items-center justify-between shadow-2xs shrink-0">
                 <span className="text-xs font-semibold text-slate-500">Bills</span>
-                <span className="text-base font-extrabold text-slate-900 font-mono">
+                <span className="text-sm font-extrabold text-slate-900 font-mono">
                   {savedBills.length}
                 </span>
               </div>
-              <div className="bg-white rounded-xl py-2 px-3 border border-slate-200/80 flex items-center justify-between shadow-2xs">
-                <span className="text-xs font-semibold text-slate-500">Used</span>
-                <span className="text-base font-extrabold text-indigo-600 font-mono">
+              <div className="flex-1 bg-white rounded-xl py-2 px-3 border border-slate-200/80 flex items-center justify-between shadow-2xs min-w-0">
+                <span className="text-xs font-semibold text-slate-500 shrink-0">Used</span>
+                <span className="text-sm font-extrabold text-indigo-600 font-mono whitespace-nowrap">
                   {storageUsage || '0 KB'}
                 </span>
               </div>
