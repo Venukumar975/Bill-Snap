@@ -279,7 +279,7 @@ export default function Sidebar({
 
         {/* Sidebar Footer */}
         <div className="p-3.5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-center">
-          <span className="text-xs font-bold text-slate-700">
+          <span className="text-[11px] font-medium text-slate-400">
             Bill Snap by Venu Kumar
           </span>
         </div>
