@@ -13,27 +13,30 @@
 ---
 
 ## 📋 Table of Contents
-1. [Product Overview & Elevator Pitch](#1-product-overview--elevator-pitch)
-2. [HCI & UI/UX Design System (Authoritative Citations & App Proofs)](#2-hci--uiux-design-system)
-   - [Mobile Ergonomics & Physical Interaction](#1-mobile-ergonomics--physical-interaction)
-   - [Cognitive Psychology & Decision-Making](#2-cognitive-psychology--decision-making)
-   - [Visual Perception & Layout Stability](#3-visual-perception--layout-stability)
-   - [Usability Heuristics & Error Handling](#4-usability-heuristics--error-handling)
-   - [Semantic Color Theory & Accessibility (WCAG 2.1)](#5-semantic-color-theory--accessibility-wcag-21)
-3. [System Architecture: The Edge-to-Cloud Cascaded Pipeline](#3-system-architecture-the-edge-to-cloud-cascaded-pipeline)
-4. [On-Device Machine Learning Engine (MobileNetV3 ONNX)](#4-on-device-machine-learning-engine-mobilenetv3-onnx)
-5. [Assignment ML Deliverable: 20-Image End-to-End Evaluation](#5-assignment-ml-deliverable-20-image-end-to-end-evaluation)
-6. [Architectural Decisions & Engineering Trade-Offs](#6-architectural-decisions--engineering-trade-offs)
-7. [Repository File Structure](#7-repository-file-structure)
-8. [Quick Start & Local Setup](#8-quick-start--local-setup)
+1. [🚀 Product Overview & Elevator Pitch](#1--product-overview--elevator-pitch)
+2. [🧪 HCI & UI/UX Design System (Authoritative Citations & App Proofs)](#2--hci--uiux-design-system)
+   - [📐 Mobile Ergonomics & Physical Interaction](#1--mobile-ergonomics--physical-interaction)
+   - [🧠 Cognitive Psychology & Decision-Making](#2--cognitive-psychology--decision-making)
+   - [👁️ Visual Perception & Layout Stability](#3--visual-perception--layout-stability)
+   - [🛡️ Usability Heuristics & Error Handling](#4--usability-heuristics--error-handling)
+   - [🎨 Semantic Color Theory & Accessibility (WCAG 2.1)](#5--semantic-color-theory--accessibility-wcag-21)
+3. [🔀 System Architecture: The Edge-to-Cloud Cascaded Pipeline](#3--system-architecture-the-edge-to-cloud-cascaded-pipeline)
+4. [🔬 On-Device Machine Learning Engine (MobileNetV3 ONNX)](#4--on-device-machine-learning-engine-mobilenetv3-onnx)
+5. [📊 Assignment ML Deliverable: 20-Image End-to-End Evaluation](#5--assignment-ml-deliverable-20-image-end-to-end-evaluation)
+6. [⚖️ Architectural Decisions & Engineering Trade-Offs](#6--architectural-decisions--engineering-trade-offs)
+7. [🗂️ Repository File Structure](#7--repository-file-structure)
+8. [⚡ Quick Start & Local Setup](#8--quick-start--local-setup)
+9. [📐 Master HCI & UI/UX Scientific Compliance Matrix](#9--master-hci--uiux-scientific-compliance-matrix)
 
 ---
 
-## 1. Product Overview & Elevator Pitch
+<a id="1-product-overview--elevator-pitch"></a>
+## 1. 🚀 Product Overview & Elevator Pitch
 
 Tracking personal and business expenses from physical receipts is notoriously tedious. Users are forced to manually type store names, dates, line items, and totals into spreadsheets or finance apps, resulting in lost receipts, untracked spending, and friction.
 
 **Bill Snap** solves this by turning any mobile smartphone into an intelligent, instant expense scanner:
+
 1. **Instant On-Device Pre-Filter (0 ms – 700 ms on Mobile)**: Uses a local MobileNetV3 deep learning model running in WebAssembly to verify receipts directly in phone memory before making any cloud network requests.
 2. **Multimodal Cloud Extraction**: Automatically extracts merchant name, transaction date, total amount, currency, and categorizes spending (`Food`, `Groceries`, `Utilities`, `Shopping`, `Travel`, `Health`, `Other`).
 3. **Distributed Multi-Batch Scanning**: Select and process multiple receipt chits in parallel with dynamic model sharding (distributing requests across available Gemini models), inline soft-rejection handling, and zero-CLS concurrency protection.
@@ -44,21 +47,23 @@ Tracking personal and business expenses from physical receipts is notoriously te
 <p align="center">
   <img src="app_pics/homepage-3.jpeg" alt="Bill Snap Home Screen" width="300">
   <br>
-  <em>Figure 1.1: Bill Snap Live Mobile Home Screen — Royal Indigo spending hero card and scrollable receipt feed.</em>
+  <sub><em>📷 Figure 1.1: Bill Snap Live Mobile Home Screen — Royal Indigo spending hero card and scrollable receipt feed.</em></sub>
 </p>
 
 ---
 
-## 2. HCI & UI/UX Design System
+<a id="2-hci--uiux-design-system"></a>
+## 2. 🧪 HCI & UI/UX Design System
 
 Every user interface component and interaction pattern across Bill Snap is intentionally engineered using established **Human-Computer Interaction (HCI)** and **Cognitive Psychology** principles, validated against research from Jon Yablonski’s [Laws of UX](https://lawsofux.com/), the [Nielsen Norman Group (NN/g)](https://www.nngroup.com/), Google Web Vitals, and W3C WCAG 2.1 standards.
 
 ---
 
-### 1. Mobile Ergonomics & Physical Interaction
+<a id="1-mobile-ergonomics--physical-interaction"></a>
+### 1. 📐 Mobile Ergonomics & Physical Interaction
 
 #### A. Steven Hoober’s Thumb Zone
-* **Authoritative Citation:** Steven Hoober (2013), *Designing Mobile Interfaces* & research published in Smashing Magazine (*[How Do Users Really Hold Mobile Devices?](https://www.smashingmagazine.com/2013/02/how-do-users-really-hold-mobile-devices/)*).
+* **Authoritative Citation:** Steven Hoober (2013), *Designing Mobile Interfaces*, research published on UXmatters (*[How Do Users Really Hold Mobile Devices?](https://www.uxmatters.com/mt/archives/2013/02/how-do-users-really-hold-mobile-devices.php)*), and Smashing Magazine (*[The Thumb Zone: Designing For Mobile Users](https://www.smashingmagazine.com/2016/09/the-thumb-zone-designing-for-mobile-users/)*).
 * **The Rule:** ~49% of smartphone users navigate with a single hand, relying exclusively on their thumb. Touch targets must cluster in the lower third ("Natural Zone") of the screen to minimize grip shifting, hand gymnastics, and thumb strain.
 
 <p align="center">
@@ -66,7 +71,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/categorical-and-mothly-analysis-of-bills.jpeg" alt="Bottom Sheet Modal Reachability" width="280">
   <br>
-  <em>Figure 2.1: Steven Hoober's Thumb Zone — Primary actions anchored in the natural lower thumb arc (Bottom-anchored FAB speed dial and Bottom-Sheet spending modal).</em>
+  <sub><em>📐 Figure 2.1: Steven Hoober's Thumb Zone — Primary actions anchored in the natural lower thumb arc (Bottom-anchored FAB speed dial and Bottom-Sheet spending modal).</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -85,7 +90,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/homepage-3.jpeg" alt="Fitts's Law Delete Target on Bill Card" width="280">
   <br>
-  <em>Figure 2.2: Fitts's Law — Full-width 64px tap surfaces in the sidebar drawer and permanent red delete touch containers on bill cards.</em>
+  <sub><em>⚡ Figure 2.2: Fitts's Law — Full-width 64px tap surfaces in the sidebar drawer and permanent red delete touch containers on bill cards.</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -94,7 +99,8 @@ Every user interface component and interaction pattern across Bill Snap is inten
 
 ---
 
-### 2. Cognitive Psychology & Decision-Making
+<a id="2-cognitive-psychology--decision-making"></a>
+### 2. 🧠 Cognitive Psychology & Decision-Making
 
 #### A. Hick’s Law (Choice Overload Reduction)
 * **Authoritative Citation:** William Edmund Hick & Ray Hyman (1952); Jon Yablonski (*[Laws of UX: Hick’s Law](https://lawsofux.com/hicks-law/)*).
@@ -105,7 +111,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/homepage-3.jpeg" alt="Hick's Law Focused Home Feed" width="280">
   <br>
-  <em>Figure 2.3: Hick's Law — Focused home feed presenting only two clear actions on empty state (Snap or Gallery) and a single primary feed on populated state.</em>
+  <sub><em>🧠 Figure 2.3: Hick's Law — Focused home feed presenting only two clear actions on empty state (Snap or Gallery) and a single primary feed on populated state.</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -123,7 +129,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/multi-batch-processing-1.jpeg" alt="Progressive Disclosure in Multi-Batch Review" width="280">
   <br>
-  <em>Figure 2.4: Progressive Disclosure — Advanced configurations tucked neatly into sub-modals, and multi-bill batch processing with progressive inline triage.</em>
+  <sub><em>📂 Figure 2.4: Progressive Disclosure — Advanced configurations tucked neatly into sub-modals, and multi-bill batch processing with progressive inline triage.</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -132,7 +138,8 @@ Every user interface component and interaction pattern across Bill Snap is inten
 
 ---
 
-### 3. Visual Perception & Layout Stability
+<a id="3-visual-perception--layout-stability"></a>
+### 3. 👁️ Visual Perception & Layout Stability
 
 #### A. Zero Cumulative Layout Shift (CLS = 0)
 * **Authoritative Citation:** Google Web Vitals & W3C Web Performance Working Group (*[web.dev: Cumulative Layout Shift](https://web.dev/articles/cls)*).
@@ -143,7 +150,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/homepage-3.jpeg" alt="Zero CLS Fixed Top Hero Card" width="280">
   <br>
-  <em>Figure 2.5: Zero Cumulative Layout Shift — Fixed drawer row heights opening dedicated modals (no accordion jumps) and fixed top hero container while only the list scrolls.</em>
+  <sub><em>📐 Figure 2.5: Zero Cumulative Layout Shift — Fixed drawer row heights opening dedicated modals (no accordion jumps) and fixed top hero container while only the list scrolls.</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -161,7 +168,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/homepage-3.jpeg" alt="Gestalt Law of Common Region in Feed" width="280">
   <br>
-  <em>Figure 2.6: Gestalt Law of Common Region — Distinct bounded cards grouping related controls in the sidebar drawer and encapsulating individual bill items in the feed.</em>
+  <sub><em>🧬 Figure 2.6: Gestalt Law of Common Region — Distinct bounded cards grouping related controls in the sidebar drawer and encapsulating individual bill items in the feed.</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -173,7 +180,8 @@ Every user interface component and interaction pattern across Bill Snap is inten
 
 ---
 
-### 4. Usability Heuristics & Error Handling
+<a id="4-usability-heuristics--error-handling"></a>
+### 4. 🛡️ Usability Heuristics & Error Handling
 
 #### A. Visibility of System Status (Heuristic #1)
 * **Authoritative Citation:** Jakob Nielsen, Nielsen Norman Group (*[NN/g 10 Usability Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/)*).
@@ -184,7 +192,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/saving-bill.jpeg" alt="System Status Pipeline Telemetry" width="280">
   <br>
-  <em>Figure 2.7: Visibility of System Status — Real-time telemetry badges: "Verified Receipt (100% confidence) • 117ms", "3.1-flash-lite", and "Pipeline: Edge-Verified (MobileNetV3) 399ms".</em>
+  <sub><em>📡 Figure 2.7: Visibility of System Status — Real-time telemetry badges: "Verified Receipt (100% confidence) • 117ms", "3.1-flash-lite", and "Pipeline: Edge-Verified (MobileNetV3) 399ms".</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -203,7 +211,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/saving-bill.jpeg" alt="Pre-Save Editable Form Fields" width="280">
   <br>
-  <em>Figure 2.8: Error Prevention & User Control — Zero Lockout Policy ("Scan Anyway" override) and pre-save editable review inputs with confidence ratings.</em>
+  <sub><em>🛡️ Figure 2.8: Error Prevention & User Control — Zero Lockout Policy ("Scan Anyway" override) and pre-save editable review inputs with confidence ratings.</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -222,7 +230,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/saving-bill.jpeg" alt="Doherty Threshold Sub-400ms Pipeline" width="280">
   <br>
-  <em>Figure 2.9: Doherty Threshold — Sub-400ms speed verified live on mobile device (⚡ 117ms on-device edge validation and 399ms total pipeline latency).</em>
+  <sub><em>⏱️ Figure 2.9: Doherty Threshold — Sub-400ms speed verified live on mobile device (⚡ 117ms on-device edge validation and 399ms total pipeline latency).</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -240,7 +248,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/multi-batch-processing-2.jpeg" alt="Polite Rejection on Internship Poster" width="280">
   <br>
-  <em>Figure 2.10: Polite Non-Bill Rejection — Plain-language explanations detailing why non-receipts (CNN technical diagram, internship poster) cannot be scanned.</em>
+  <sub><em>💬 Figure 2.10: Polite Non-Bill Rejection — Plain-language explanations detailing why non-receipts (CNN technical diagram, internship poster) cannot be scanned.</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -248,7 +256,8 @@ Every user interface component and interaction pattern across Bill Snap is inten
 
 ---
 
-### 5. Semantic Color Theory & Accessibility (WCAG 2.1)
+<a id="5-semantic-color-theory--accessibility-wcag-21"></a>
+### 5. 🎨 Semantic Color Theory & Accessibility (WCAG 2.1)
 
 #### A. WCAG 2.1 Guideline 1.4.1 (Use of Color - Triple Encoding)
 * **Authoritative Citation:** W3C Web Accessibility Initiative (*[WCAG 2.1: Guideline 1.4.1 Use of Color](https://www.w3.org/WAI/WCAG21/Understanding/use-of-color.html)*).
@@ -259,7 +268,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/saving-bill.jpeg" alt="WCAG 2.1 Triple Encoding in Form Review" width="280">
   <br>
-  <em>Figure 2.11: WCAG 2.1 Guideline 1.4.1 — Triple simultaneous encoding: Icon, plain text string, and exact numerical data across every category and form field.</em>
+  <sub><em>👁️ Figure 2.11: WCAG 2.1 Guideline 1.4.1 — Triple simultaneous encoding: Icon, plain text string, and exact numerical data across every category and form field.</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -279,7 +288,7 @@ Every user interface component and interaction pattern across Bill Snap is inten
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/homepage-3.jpeg" alt="FinTech Mental Models Color System across Feed" width="280">
   <br>
-  <em>Figure 2.12: FinTech Cognitive Mental Models — Multi-colored segmented progress bar and category color hierarchy aligned with established finance applications.</em>
+  <sub><em>🎨 Figure 2.12: FinTech Cognitive Mental Models — Multi-colored segmented progress bar and category color hierarchy aligned with established finance applications.</em></sub>
 </p>
 
 * **How Bill Snap Implements It:**
@@ -290,7 +299,8 @@ Every user interface component and interaction pattern across Bill Snap is inten
 
 ---
 
-## 3. System Architecture: The Edge-to-Cloud Cascaded Pipeline
+<a id="3-system-architecture-the-edge-to-cloud-cascaded-pipeline"></a>
+## 3. 🔀 System Architecture: The Edge-to-Cloud Cascaded Pipeline
 
 In modern productivity utilities, dispatching large images of non-receipts (selfies, ID cards, landscape photos) directly to cloud multimodal APIs wastes user quota, drains battery, and introduces 2–4 seconds of network latency just to tell the user: *"This is not a bill"*.
 
@@ -330,7 +340,7 @@ flowchart LR
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="app_pics/multi-batch-processing-1.jpeg" alt="Distributed Multi-Batch Review Grid" width="280">
   <br>
-  <em>Figure 3.1: Distributed Multi-Batch Processing — Left: Non-intrusive floating toast enforcing safe AI model concurrency limits. Right: Parallel sharded triage grid with per-card model badges and inline soft rejection.</em>
+  <sub><em>🔀 Figure 3.1: Distributed Multi-Batch Processing — Left: Non-intrusive floating toast enforcing safe AI model concurrency limits. Right: Parallel sharded triage grid with per-card model badges and inline soft rejection.</em></sub>
 </p>
 
 #### Multi-Batch UX & Concurrency Architecture:
@@ -340,7 +350,8 @@ flowchart LR
 
 ---
 
-## 4. On-Device Machine Learning Engine (MobileNetV3 ONNX)
+<a id="4-on-device-machine-learning-engine-mobilenetv3-onnx"></a>
+## 4. 🔬 On-Device Machine Learning Engine (MobileNetV3 ONNX)
 
 | Specification | Technical Value | Engineering Context |
 | :--- | :--- | :--- |
@@ -356,11 +367,11 @@ Below is the verified Netron computational graph of the bundled ONNX model. You 
 
 <p align="center">
   <a href="docs/assets/netron_architecture.svg" target="_blank">
-    <img src="https://img.shields.io/badge/🔍%20Zoom%20In%20%2F%20Vector%20SVG-Open%20Interactive%20Graph-blue?style=for-the-badge&logo=onnx&logoColor=white" alt="Open Netron Vector SVG">
+    <img src="https://img.shields.io/badge/%F0%9F%94%8D%20Zoom%20In%20%2F%20Vector%20SVG-Open%20Interactive%20Graph-blue?style=for-the-badge&logo=onnx&logoColor=white" alt="Open Netron Vector SVG">
   </a>
   &nbsp;
   <a href="docs/assets/netron_architecture.png" target="_blank">
-    <img src="https://img.shields.io/badge/🖼️%20Raster%20Overview-High%20Res%20PNG-grey?style=for-the-badge" alt="Open Netron PNG">
+    <img src="https://img.shields.io/badge/%F0%9F%96%BC%EF%B8%8F%20Raster%20Overview-High%20Res%20PNG-grey?style=for-the-badge" alt="Open Netron PNG">
   </a>
 </p>
 
@@ -372,7 +383,7 @@ Below is the verified Netron computational graph of the bundled ONNX model. You 
   </div>
 </div>
 <p align="center">
-  <em>💡 Figure 4.1: Model graph rendered at native 1:1 scale (287px width). Scroll vertically inside the container to inspect layers, or click the <strong>🔍 Zoom In / Vector SVG</strong> badge above to freely pan and zoom across the full 18,616px pipeline.</em>
+  <sub><em>🔬 Figure 4.1: Model graph rendered at native 1:1 scale (287px width). Scroll vertically inside the container to inspect layers, or click the <strong>🔍 Zoom In / Vector SVG</strong> badge above to freely pan and zoom across the full 18,616px pipeline.</em></sub>
 </p>
 
 ### The 5,000-Image Empirical Benchmark & Threshold Proof
@@ -381,20 +392,26 @@ To eliminate guesswork, the model was evaluated across **5,000 verified images**
 <p align="center">
   <img src="docs/assets/threshold_analysis_proof.png" alt="Threshold Analysis Proof" width="550">
   <br>
-  <em>Figure 4.2: Empirical threshold sweep curve demonstrating the 0.65 Pareto inflection point.</em>
+  <sub><em>📈 Figure 4.2: Empirical threshold sweep curve demonstrating the 0.65 Pareto inflection point.</em></sub>
 </p>
 
 * **99.70% Genuine Bill Recall**: 997 out of 1,000 real-world receipts are automatically passed.
 * **99.45% Distractor Rejection**: Blocks 3,978 out of 4,000 random non-bill images before cloud API dispatch.
 * **Inflection Point Proof**: Moving to $0.70$ causes genuine bill recall to drop to $99.50\%$. Therefore, **`0.65`** represents the exact Pareto-optimal boundary.
 
-> 📖 **Deep Dive Documentation Links**:
-> - [📘 Detailed Architecture, Netron Analysis & Quantization Trade-offs (model.md)](./model.md)
-> - [📊 Full 5,000-Image Confusion Matrix & Failure Breakdown (test_local_model/benchmark_report_v2.md)](./test_local_model/benchmark_report_v2.md)
+### 📚 Technical Whitepapers & Research Reports
+
+For deeper mathematical proofs, layer specifications, and reproducible evaluations, consult the companion whitepapers:
+
+| Document | Primary Focus | Key Contents |
+| :--- | :--- | :--- |
+| [📘 **ML Architecture Whitepaper (`model.md`)**](./model.md) | **Model Architecture & Edge Engineering** | MobileNetV3-Small layer math (Stem Conv, SE attention, HardSwish), FP32 vs. INT8 quantization proof, interactive Netron vector SVG graph, and edge-to-cloud cascaded bridge. |
+| [📊 **5,000-Image Benchmark Report (`benchmark_report_v2.md`)**](./test_local_model/benchmark_report_v2.md) | **Empirical Evaluation & Proof** | Full $2 \times 2$ confusion matrix, stress tests on crumpled/faded receipts, transparent 32-failure analysis, and benchmark reproduction script. |
 
 ---
 
-## 5. Assignment ML Deliverable: 20-Image End-to-End Evaluation
+<a id="5-assignment-ml-deliverable-20-image-end-to-end-evaluation"></a>
+## 5. 📊 Assignment ML Deliverable: 20-Image End-to-End Evaluation
 
 As requested by the hiring team, the complete app was evaluated end-to-end across a custom test set of **20 diverse real-world images** (15 real receipts—including crumpled, faded, handwritten, and angled chits—plus 5 non-bill distractors).
 
@@ -436,7 +453,8 @@ As requested by the hiring team, the complete app was evaluated end-to-end acros
 
 ---
 
-## 6. Architectural Decisions & Engineering Trade-Offs
+<a id="6-architectural-decisions--engineering-trade-offs"></a>
+## 6. ⚖️ Architectural Decisions & Engineering Trade-Offs
 
 ### 1. Progressive Web App (PWA) vs. React Native (Expo)
 * **Decision**: We chose **PWA (Vite + React + Tailwind)**.
@@ -449,7 +467,7 @@ As requested by the hiring team, the complete app was evaluated end-to-end acros
 * **Decision**: Deployed an on-device MobileNetV3 classifier in front of the Gemini API.
 * **Why**:
   - Saves user API quota from accidental non-receipt uploads.
-  - Provides instant $\approx 15\text{ms}$ visual feedback instead of waiting 2–4 seconds for an API roundtrip.
+  - Provides instant on-device pre-screening ($15\text{ms} - 50\text{ms}$ on desktop; $0\text{ms} - 700\text{ms}$ on mobile) instead of waiting 2–4 seconds for a cloud API roundtrip.
   - Coupled with the **"Scan with AI Anyway"** override to ensure legitimate crumpled receipts are never locked out.
 
 ### 3. FP32 Precision vs. INT8 Quantization
@@ -466,7 +484,8 @@ As requested by the hiring team, the complete app was evaluated end-to-end acros
 
 ---
 
-## 7. Repository File Structure
+<a id="7-repository-file-structure"></a>
+## 7. 🗂️ Repository File Structure
 
 ```text
 Bill Snap/
@@ -521,7 +540,8 @@ Bill Snap/
 
 ---
 
-## 8. Quick Start & Local Setup
+<a id="8-quick-start--local-setup"></a>
+## 8. ⚡ Quick Start & Local Setup
 
 ### Prerequisites
 * [Node.js](https://nodejs.org/) (v18 or higher)
@@ -552,6 +572,28 @@ Open the app in Chrome/Safari on your phone, tap **"Add to Home Screen"**, and l
 1. Tap the menu icon (`≡`) at the top-left.
 2. Tap **Gemini API Key**.
 3. Paste your Gemini API key and tap **Save & Test**. The key is validated in real time against Google's models endpoint and stored strictly inside your device's `localStorage`.
+
+---
+
+<a id="9-master-hci--uiux-scientific-compliance-matrix"></a>
+## 9. 📐 Master HCI & UI/UX Scientific Compliance Matrix
+
+Below is the consolidated scientific reference matrix summarizing all **12 Human-Computer Interaction (HCI) laws, cognitive psychology principles, and accessibility standards** implemented across Bill Snap:
+
+| # | Scientific / HCI Principle | Authoritative Citation | Concrete Bill Snap Implementation | Primary Ergonomic / Psychological Impact |
+| :-: | :--- | :--- | :--- | :--- |
+| **1** | **Thumb Zone Ergonomics** | Steven Hoober (2013, UXmatters) | Primary FAB speed dial anchored at `bottom-6 right-6`; bottom-sheet sliding modals for exports & spending analytics. | Minimizes grip shifting and thumb strain on tall 20:9 mobile screens. |
+| **2** | **Fitts’s Law & Target Sizing** | Paul Fitts (1954) / WCAG 2.5.5 | Full-width 64px tap surfaces in drawer; prominent 36px red delete hitboxes on bill cards. | Prevents mis-taps; accelerates target acquisition speed. |
+| **3** | **Hick’s Law (Choice Reduction)** | Hick & Hyman (1952) | Two-button empty state (Snap or Gallery); complex date ranges and API settings partitioned into dedicated sub-modals. | Eliminates choice overload; reduces time-to-first-scan. |
+| **4** | **Progressive Disclosure** | Jakob Nielsen (NN/g) | Multi-model fallback queue hidden inside settings; multi-bill batch processing reviewed step-by-step in triage cards. | Keeps novice interface clean while retaining power-user flexibility. |
+| **5** | **Zero-CLS Layout Stability** | Google Web Vitals ($CLS = 0$) | Fixed drawer row heights (no accordion jumps); fixed top aggregate card while only feed scrolls. | Eliminates visual disorientation and accidental taps during scrolling. |
+| **6** | **Gestalt Common Region** | Max Wertheimer (1923) | Bounded bordered cards in sidebar grouping related functions (Export, AI Engine, Storage). | Users visually perceive related controls as single cognitive units. |
+| **7** | **Visibility of System Status** | NN/g Heuristic #1 | Real-time `● LIVE` model badge, dynamic Gemini key connectivity status, and IndexedDB storage byte telemetry. | Keeps user continuously informed of on-device and cloud state. |
+| **8** | **Error Prevention & Recovery** | NN/g Heuristics #3 & #5 | Pre-save editable review inputs with amber warnings; destructive two-step confirmation on database wipe. | Prevents slips before they happen and provides clear recovery paths. |
+| **9** | **Doherty Threshold (<400ms)** | Doherty & Thadani (IBM, 1982) | 0ms–700ms on-device edge verification; $<50\text{ms}$ tactile micro-animations (`active:scale-95`). | Eliminates perception of lag; keeps interaction fluid and responsive. |
+| **10** | **Polite Error Feedback** | NN/g Heuristic #9 | Soft rose banner with plain-language explanations of non-bills (diagram, selfie) + one-tap recovery. | Avoids cryptic error codes; constructively guides user recovery. |
+| **11** | **WCAG 2.1 Triple Encoding** | W3C Guideline 1.4.1 | Every category encoded using **Icon + Text Label + Numerical Value** simultaneously. | Fully accessible to colorblind and visually impaired users. |
+| **12** | **FinTech Mental Models** | Jakob's Law of Internet UX | Indigo (Action), Emerald (System Health/AI), Blue (Commute/Travel), Rose (Destructive Operations). | Leverages pre-established financial intuition from apps like Apple Wallet. |
 
 ---
 
