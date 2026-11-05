@@ -249,17 +249,23 @@ export default function Sidebar({
               className="w-full flex items-center justify-between p-3.5 hover:bg-white text-left transition group active:scale-[0.99]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-white border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition shadow-2xs ${
+                  activeModel 
+                    ? 'bg-emerald-500 text-white shadow-emerald-200' 
+                    : 'bg-slate-200 text-slate-500'
+                }`}>
                   <Cpu className="w-4 h-4" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-900">AI Engine & Models</p>
-                  <p className="text-xs text-indigo-600 font-semibold truncate max-w-[140px]">
+                  <p className={`text-xs font-semibold truncate max-w-[140px] transition ${
+                    activeModel ? 'text-emerald-600' : 'text-slate-400 font-medium'
+                  }`}>
                     {activeModel ? activeModel.replace('gemini-', '') : 'Connecting...'}
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" />
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition" />
             </button>
 
             {/* ROW 2: Smart Pre-Filter Toggle (MobileNetV3 Edge Verification) */}
