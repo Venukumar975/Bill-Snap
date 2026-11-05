@@ -45,13 +45,16 @@ export default function Sidebar({
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [keyFeedback, setKeyFeedback] = useState(null); // { type: 'success' | 'error', text: '' }
   const [localModelActive, setLocalModelActive] = useState(true);
+  const [isEditingKey, setIsEditingKey] = useState(false);
 
   // Sync API key & Local Model state on open
   useEffect(() => {
     if (isOpen) {
-      setApiKeyInput(getActiveApiKey());
+      const currentKey = getActiveApiKey();
+      setApiKeyInput(currentKey);
       setKeyFeedback(null);
       setLocalModelActive(isLocalModelEnabled());
+      setIsEditingKey(!currentKey); // Auto-expand only if no key exists yet!
     }
   }, [isOpen]);
 
@@ -94,6 +97,7 @@ export default function Sidebar({
       await testGeminiApiKey(trimmed);
       setActiveApiKey(trimmed);
       setKeyFeedback({ type: 'success', text: 'Key verified & saved to phone!' });
+      setIsEditingKey(false);
       if (onApiKeyUpdated) {
         onApiKeyUpdated(trimmed);
       }
@@ -135,8 +139,8 @@ export default function Sidebar({
               className="w-8 h-8 rounded-xl shadow-md shadow-indigo-100/50 object-cover shrink-0" 
             />
             <div>
-              <h2 className="text-base font-bold text-slate-900 leading-tight">Bill Snap</h2>
-              <p className="text-[10px] text-slate-400 font-medium">Preferences & Tools</p>
+              <h2 className="text-lg font-bold text-slate-900 leading-tight">Bill Snap</h2>
+              <p className="text-xs text-slate-400 font-medium">Preferences & Tools</p>
             </div>
           </div>
           <button
@@ -155,18 +159,18 @@ export default function Sidebar({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-800">
                 <FileSpreadsheet className="w-4 h-4 text-indigo-600" />
-                <span className="text-xs font-bold text-slate-800">Export to CSV / Excel</span>
+                <span className="text-sm font-bold text-slate-800">Export to CSV / Excel</span>
               </div>
-              <span className="text-[10px] font-bold text-indigo-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+              <span className="text-[11px] font-bold text-indigo-600 bg-white px-2 py-0.5 rounded-md border border-slate-200">
                 Excel Ready
               </span>
             </div>
 
             {/* Filter Mode Selector */}
-            <div className="flex bg-white rounded-xl p-0.5 border border-slate-200 text-[11px]">
+            <div className="flex bg-white rounded-xl p-0.5 border border-slate-200 text-xs">
               <button
                 onClick={() => setExportMode('all')}
-                className={`flex-1 py-1 rounded-lg font-semibold transition ${
+                className={`flex-1 py-1.5 rounded-lg font-semibold transition ${
                   exportMode === 'all' 
                     ? 'bg-indigo-600 text-white shadow-xs' 
                     : 'text-slate-600 hover:text-slate-900'
@@ -176,7 +180,7 @@ export default function Sidebar({
               </button>
               <button
                 onClick={() => setExportMode('range')}
-                className={`flex-1 py-1 rounded-lg font-semibold transition ${
+                className={`flex-1 py-1.5 rounded-lg font-semibold transition ${
                   exportMode === 'range' 
                     ? 'bg-indigo-600 text-white shadow-xs' 
                     : 'text-slate-600 hover:text-slate-900'
@@ -190,7 +194,7 @@ export default function Sidebar({
             {exportMode === 'range' && (
               <div className="grid grid-cols-2 gap-2 pt-1 animate-fade-in">
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-500 block mb-1">From Date</label>
+                  <label className="text-[11px] font-semibold text-slate-500 block mb-1">From Date</label>
                   <input
                     type="date"
                     value={startDate}
@@ -199,7 +203,7 @@ export default function Sidebar({
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-slate-500 block mb-1">To Date</label>
+                  <label className="text-[11px] font-semibold text-slate-500 block mb-1">To Date</label>
                   <input
                     type="date"
                     value={endDate}
@@ -214,7 +218,7 @@ export default function Sidebar({
             <button
               disabled={savedBills.length === 0}
               onClick={handleExportCSV}
-              className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 bg-white border border-slate-200 text-slate-800 rounded-xl font-semibold text-xs hover:bg-slate-50 active:scale-95 transition shadow-xs disabled:opacity-50"
+              className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 bg-white border border-slate-200 text-slate-800 rounded-xl font-bold text-xs hover:bg-slate-50 active:scale-95 transition shadow-xs disabled:opacity-50"
             >
               <Download className="w-3.5 h-3.5 text-indigo-600" />
               Download CSV File
@@ -228,53 +232,23 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* SECTION 2: Local Device Storage (2-Column Stat Tile) */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2.5">
-            <div className="flex items-center gap-2 text-slate-800">
-              <HardDrive className="w-4 h-4 text-slate-500" />
-              <span className="text-xs font-bold text-slate-800">Local Device Storage</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 pt-0.5">
-              <div className="bg-white rounded-xl p-2.5 border border-slate-200/80 text-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                  Saved Bills
-                </span>
-                <span className="text-base font-extrabold text-slate-900">
-                  {savedBills.length}
-                </span>
-              </div>
-              <div className="bg-white rounded-xl p-2.5 border border-slate-200/80 text-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                  Storage Used
-                </span>
-                <span className="text-base font-extrabold text-indigo-600 font-mono">
-                  {storageUsage || '0 KB'}
-                </span>
-              </div>
-            </div>
-
-            <p className="text-[11px] text-slate-500 leading-relaxed">
-              Stored privately on your device using on-device IndexedDB.
-            </p>
-          </div>
-
-          {/* SECTION 3: AI Engine & Models */}
-          <div className="space-y-2">
+          {/* TIER 2: UNIFIED AI & ENGINE SETTINGS (Grouped List Architecture) */}
+          <div className="rounded-2xl bg-slate-50 border border-slate-200/70 overflow-hidden divide-y divide-slate-200/60 shadow-2xs">
+            {/* ROW 1: AI Engine & Models (Taps to open model queue) */}
             <button
               onClick={() => {
                 onClose();
                 onOpenModelSettings();
               }}
-              className="w-full flex items-center justify-between p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 hover:bg-indigo-50 text-left transition group active:scale-98"
+              className="w-full flex items-center justify-between p-3.5 hover:bg-white text-left transition group active:scale-[0.99]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-white border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-2xs">
                   <Cpu className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-900">AI Engine & Models</p>
-                  <p className="text-[11px] text-indigo-600 font-medium truncate max-w-[130px]">
+                  <p className="text-sm font-bold text-slate-900">AI Engine & Models</p>
+                  <p className="text-xs text-indigo-600 font-semibold truncate max-w-[140px]">
                     {activeModel ? activeModel.replace('gemini-', '') : 'Connecting...'}
                   </p>
                 </div>
@@ -282,175 +256,218 @@ export default function Sidebar({
               <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" />
             </button>
 
-            {/* Modernized On-Device Smart Pre-filter */}
-            <div className={`p-3.5 rounded-2xl border transition-all duration-200 ${
-              localModelActive 
-                ? 'bg-emerald-50/40 border-emerald-200/80' 
-                : 'bg-slate-50 border-slate-200/80'
-            }`}>
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-start gap-2.5">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition shadow-2xs ${
-                    localModelActive 
-                      ? 'bg-emerald-500 text-white shadow-emerald-200' 
-                      : 'bg-slate-200 text-slate-500'
+            {/* ROW 2: Smart Pre-Filter Toggle (MobileNetV3 Edge Verification) */}
+            <div className="p-3.5 flex items-center justify-between gap-2 bg-slate-50/50">
+              <div className="flex items-start gap-2.5 min-w-0 pr-2">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition shadow-2xs ${
+                  localModelActive 
+                    ? 'bg-emerald-500 text-white shadow-emerald-200' 
+                    : 'bg-slate-200 text-slate-500'
+                }`}>
+                  <Zap className="w-4 h-4 fill-current" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 whitespace-nowrap">
+                    <p className="text-sm font-bold text-slate-900">Smart Pre-Filter</p>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border transition ${
+                      localModelActive 
+                        ? 'text-emerald-700 bg-emerald-100/70 border-emerald-300' 
+                        : 'text-slate-500 bg-slate-100 border-slate-200'
+                    }`}>
+                      {localModelActive ? 'On' : 'Off'}
+                    </span>
+                  </div>
+                  <p className={`text-[11px] mt-0.5 leading-snug transition ${
+                    localModelActive ? 'text-emerald-600 font-semibold' : 'text-slate-500'
                   }`}>
-                    <Zap className="w-4 h-4 fill-current" />
+                    {localModelActive ? 'On-device receipt check' : 'Direct cloud dispatch'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Switch */}
+              <div className="flex flex-col items-center gap-0.5 shrink-0">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={localModelActive}
+                  onClick={() => handleToggleLocalModel(!localModelActive)}
+                  className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out cursor-pointer ${
+                    localModelActive ? 'bg-emerald-500' : 'bg-slate-300'
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
+                      localModelActive ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+                <span className={`text-[10px] font-extrabold font-mono transition ${
+                  localModelActive ? 'text-emerald-600' : 'text-slate-400'
+                }`}>
+                  {localModelActive ? 'ON' : 'OFF'}
+                </span>
+              </div>
+            </div>
+
+            {/* ROW 3: Gemini API Key (Progressive Disclosure) */}
+            <div className="p-3.5 space-y-2.5 bg-slate-50/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-600 flex items-center justify-center shadow-2xs">
+                    <KeyRound className="w-4 h-4" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-xs font-bold text-slate-900">Smart Pre-Filter</p>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border transition ${
-                        localModelActive 
-                          ? 'text-emerald-700 bg-emerald-100/70 border-emerald-300' 
-                          : 'text-slate-500 bg-slate-100 border-slate-200'
-                      }`}>
-                        {localModelActive ? 'Saves API Tokens' : 'Disabled'}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                      {localModelActive 
-                        ? 'Checks bills on phone in 15ms so you never waste API tokens.' 
-                        : 'All photos sent straight to cloud without local check.'}
-                    </p>
+                    <p className="text-sm font-bold text-slate-900">Gemini API Key</p>
+                    <p className="text-[11px] text-slate-400 font-medium">BYOK • On-Device</p>
                   </div>
                 </div>
 
-                {/* Modern Switch with State Color (Green = ON, Slate = OFF) */}
-                <div className="flex flex-col items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1.5">
+                  {apiKeyInput ? (
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                      Required
+                    </span>
+                  )}
                   <button
                     type="button"
-                    role="switch"
-                    aria-checked={localModelActive}
-                    onClick={() => handleToggleLocalModel(!localModelActive)}
-                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 ease-in-out focus:outline-none cursor-pointer ${
-                      localModelActive ? 'bg-emerald-500' : 'bg-slate-300'
-                    }`}
+                    onClick={() => setIsEditingKey(!isEditingKey)}
+                    className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50/70 border border-indigo-100 hover:bg-indigo-100 px-2.5 py-1 rounded-md transition active:scale-95"
                   >
-                    <div
-                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ease-in-out ${
-                        localModelActive ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
+                    {isEditingKey ? 'Close' : 'Change'}
                   </button>
-                  <span className={`text-[9px] font-extrabold font-mono transition ${
-                    localModelActive ? 'text-emerald-600' : 'text-slate-400'
-                  }`}>
-                    {localModelActive ? 'ON' : 'OFF'}
-                  </span>
                 </div>
               </div>
+
+              {/* Progressively Disclosed Input Form */}
+              {isEditingKey && (
+                <div className="space-y-2 pt-1 animate-fade-in">
+                  <p className="text-[10px] text-slate-500 leading-snug">
+                    Stored strictly in browser localStorage. Never leaves your phone.
+                  </p>
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      placeholder="Paste Gemini API Key (AIzaSy...)"
+                      value={apiKeyInput}
+                      onChange={(e) => {
+                        setApiKeyInput(e.target.value);
+                        setKeyFeedback(null);
+                      }}
+                      className="w-full pl-2.5 pr-8 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                    >
+                      {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      disabled={isTestingKey || !apiKeyInput.trim()}
+                      onClick={handleSaveAndTestKey}
+                      className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition active:scale-95 disabled:opacity-50"
+                    >
+                      {isTestingKey ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Testing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-3 h-3" />
+                          <span>Save & Test</span>
+                        </>
+                      )}
+                    </button>
+                    {apiKeyInput && (
+                      <button
+                        type="button"
+                        onClick={handleClearKey}
+                        className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-semibold transition active:scale-95"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {keyFeedback && (
+                    <div className={`p-2 rounded-xl text-[10px] font-semibold flex items-start gap-1.5 ${
+                      keyFeedback.type === 'success' 
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      {keyFeedback.type === 'success' ? (
+                        <CheckCircle2 className="w-3 h-3 shrink-0 mt-0.5 text-emerald-600" />
+                      ) : (
+                        <AlertCircle className="w-3 h-3 shrink-0 mt-0.5 text-red-600" />
+                      )}
+                      <span>{keyFeedback.text}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* SECTION 4: API Key Configuration (BYOK - Bring Your Own Key) */}
+          {/* TIER 3: ON-DEVICE STORAGE & DATA MANAGEMENT */}
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2.5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-700">
-                <KeyRound className="w-4 h-4 text-slate-500" />
-                <span className="text-xs font-bold text-slate-800">Gemini API Key (BYOK)</span>
+              <div className="flex items-center gap-2 text-slate-800">
+                <HardDrive className="w-4 h-4 text-slate-500" />
+                <span className="text-sm font-bold text-slate-800">On-Device Storage</span>
               </div>
-              <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded-md border border-slate-200">
-                On-Device
-              </span>
+              <span className="text-[11px] font-mono font-semibold text-slate-400">IndexedDB</span>
             </div>
 
-            <p className="text-[11px] text-slate-500 leading-relaxed">
-              Saved strictly in your phone's browser <code className="text-indigo-600 font-mono text-[10px]">localStorage</code>. Never sent to any server.
-            </p>
-
-            {/* Input with Show/Hide Toggle */}
-            <div className="relative">
-              <input
-                type={showApiKey ? 'text' : 'password'}
-                placeholder="Paste AI Studio API Key (AIzaSy...)"
-                value={apiKeyInput}
-                onChange={(e) => {
-                  setApiKeyInput(e.target.value);
-                  setKeyFeedback(null);
-                }}
-                className="w-full pl-3 pr-9 py-2 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 font-mono outline-none focus:border-indigo-500 transition"
-              />
-              <button
-                type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
-              >
-                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+            {/* Compact Side-by-Side Stat Containers */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-white rounded-xl py-2 px-3 border border-slate-200/80 flex items-center justify-between shadow-2xs">
+                <span className="text-xs font-semibold text-slate-500">Bills</span>
+                <span className="text-base font-extrabold text-slate-900 font-mono">
+                  {savedBills.length}
+                </span>
+              </div>
+              <div className="bg-white rounded-xl py-2 px-3 border border-slate-200/80 flex items-center justify-between shadow-2xs">
+                <span className="text-xs font-semibold text-slate-500">Used</span>
+                <span className="text-base font-extrabold text-indigo-600 font-mono">
+                  {storageUsage || '0 KB'}
+                </span>
+              </div>
             </div>
 
-            {/* Action Buttons: Save & Verify / Clear */}
-            <div className="flex gap-2 pt-0.5">
-              <button
-                disabled={isTestingKey || !apiKeyInput.trim()}
-                onClick={handleSaveAndTestKey}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition active:scale-95 disabled:opacity-50"
-              >
-                {isTestingKey ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Testing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Save & Test</span>
-                  </>
-                )}
-              </button>
-
-              {apiKeyInput && (
+            {/* Red Destructive Action Container */}
+            {savedBills.length > 0 && (
+              <div className="pt-1">
                 <button
-                  type="button"
-                  onClick={handleClearKey}
-                  className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl text-xs font-semibold transition active:scale-95"
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to delete all saved bills from this device?')) {
+                      onClearAllBills();
+                      onClose();
+                    }
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition active:scale-95 shadow-2xs"
                 >
-                  Clear
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Clear All Saved Bills
                 </button>
-              )}
-            </div>
-
-            {/* Key Verification Feedback Alert */}
-            {keyFeedback && (
-              <div className={`p-2 rounded-xl text-[11px] font-semibold flex items-start gap-1.5 ${
-                keyFeedback.type === 'success' 
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                  : 'bg-red-50 text-red-700 border border-red-200'
-              }`}>
-                {keyFeedback.type === 'success' ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5 text-emerald-600" />
-                ) : (
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-red-600" />
-                )}
-                <span>{keyFeedback.text}</span>
               </div>
             )}
           </div>
-
-          {/* SECTION 5: Destructive Action (Safely placed at bottom) */}
-          {savedBills.length > 0 && (
-            <div className="pt-2">
-              <button
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to delete all saved bills from this device?')) {
-                    onClearAllBills();
-                    onClose();
-                  }
-                }}
-                className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-2xl transition border border-red-200 bg-white shadow-2xs"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Clear All Saved Bills
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Sidebar Footer */}
         <div className="p-3.5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-center">
-          <span className="text-[11px] text-slate-400 font-medium">
-            Bill Snap • Offline Ready
+          <span className="text-xs font-bold text-slate-700">
+            Bill Snap by Venu Kumar
           </span>
         </div>
       </div>
