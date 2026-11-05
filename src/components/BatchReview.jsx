@@ -14,7 +14,8 @@ import {
   Tag, 
   RotateCcw,
   Check,
-  AlertCircle
+  AlertCircle,
+  Eye
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -47,6 +48,7 @@ export default function BatchReview({
   batchLimitNotice
 }) {
   const [editingItem, setEditingItem] = useState(null);
+  const [selectedPreview, setSelectedPreview] = useState(null);
   const [editForm, setEditForm] = useState({
     merchant: '',
     date: '',
@@ -211,24 +213,36 @@ export default function BatchReview({
                     </button>
                   </div>
 
-                  {/* Clean Framed Thumbnail Container */}
-                  <div className="relative h-28 w-full bg-slate-100/80 border-b border-slate-100 overflow-hidden flex items-center justify-center">
+                  {/* Clean Framed Thumbnail Container (Tap to open full photo) */}
+                  <div 
+                    onClick={() => setSelectedPreview({
+                      dataUrl: item.dataUrl,
+                      title: item.analysis?.merchant?.value ? `${item.analysis.merchant.value} — Receipt #${index + 1}` : `Receipt #${index + 1}`
+                    })}
+                    className="relative h-28 w-full bg-slate-100/80 border-b border-slate-100 overflow-hidden flex items-center justify-center cursor-pointer group/thumb hover:brightness-95 transition"
+                    title="Tap to view receipt photo"
+                  >
                     <img
                       src={item.dataUrl}
                       alt={`Receipt ${index + 1}`}
-                      className="h-full w-full object-contain p-1"
+                      className="h-full w-full object-contain p-1 pointer-events-none"
                     />
+
+                    {/* Subtle hover eye icon */}
+                    <div className="absolute inset-0 bg-slate-900/15 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition pointer-events-none">
+                      <Eye className="w-4 h-4 text-white drop-shadow-md" />
+                    </div>
 
                     {/* Non-overlapping status badge pinned inside bottom of thumbnail */}
                     {isLocalChecking && (
-                      <div className="absolute inset-x-2 bottom-2 bg-indigo-600/90 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-xs">
+                      <div className="absolute inset-x-2 bottom-2 bg-indigo-600/90 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-xs pointer-events-none">
                         <Loader2 className="w-3 h-3 animate-spin shrink-0" />
                         <span>Checking locally...</span>
                       </div>
                     )}
 
                     {isAiAnalyzing && (
-                      <div className="absolute inset-x-2 bottom-2 bg-indigo-600/90 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-xs animate-pulse">
+                      <div className="absolute inset-x-2 bottom-2 bg-indigo-600/90 backdrop-blur-xs text-white text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-xs animate-pulse pointer-events-none">
                         <Sparkles className="w-3 h-3 animate-spin shrink-0" />
                         <span>Extracting with AI...</span>
                       </div>
@@ -508,6 +522,37 @@ export default function BatchReview({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Full Receipt Image Modal (Identical to BillCard modal) */}
+      {selectedPreview && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setSelectedPreview(null)}
+        >
+          <div 
+            className="relative max-w-sm max-h-[85vh] bg-white rounded-3xl p-3 shadow-2xl flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 px-1 border-b border-slate-100 mb-2">
+              <span className="text-xs font-bold text-slate-800 truncate mr-2">{selectedPreview.title}</span>
+              <button 
+                onClick={() => setSelectedPreview(null)}
+                className="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition active:scale-95"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="overflow-auto flex-1 flex items-center justify-center bg-slate-50 rounded-2xl p-2">
+              <img 
+                src={selectedPreview.dataUrl} 
+                alt="Full receipt" 
+                className="max-h-[70vh] w-auto object-contain rounded-xl"
+              />
+            </div>
           </div>
         </div>
       )}

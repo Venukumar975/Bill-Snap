@@ -18,37 +18,46 @@ export default function BillResult({
   onSave, 
   onReset 
 }) {
-  // Case 1: NOT a bill (Polite rejection)
+  // Case 1: NOT a bill (Polite rejection with stable framed container)
   if (!analysis.is_bill) {
     return (
-      <div className="flex-1 flex flex-col justify-between py-2">
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
-          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 border border-amber-100">
-            <AlertCircle className="w-8 h-8" />
-          </div>
-
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Not a Bill or Receipt</h2>
-          <p className="text-sm text-slate-600 leading-relaxed max-w-xs mb-6">
-            {analysis.rejection_reason || 
-              "This image does not appear to be a valid receipt or bill. Please select a clear receipt photo."}
-          </p>
-
-          <div className="w-full max-w-[200px] h-32 rounded-xl overflow-hidden border border-slate-200/80 mb-6 bg-slate-50 flex items-center justify-center">
+      <div className="flex-1 flex flex-col justify-between overflow-y-auto">
+        <div className="space-y-3">
+          {/* Framed Image Container (Consistent height, no jump) */}
+          <div className="h-[370px] sm:h-[440px] w-full shrink-0 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-center overflow-hidden relative shadow-xs">
             <img 
               src={imageDataUrl} 
               alt="Rejected image preview" 
-              className="max-h-full max-w-full object-contain"
+              className="max-h-full max-w-full object-contain rounded-xl"
             />
+          </div>
+
+          {/* In-place Rejection Card */}
+          <div className="p-3.5 bg-rose-50/95 border border-rose-200 rounded-2xl shadow-xs space-y-2">
+            <div className="flex items-start gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+                <AlertCircle className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-rose-950">Not a Bill or Receipt</p>
+                <p className="text-[11px] text-rose-700 mt-0.5 leading-relaxed">
+                  {analysis.rejection_reason || 
+                    "This image does not appear to be a valid receipt or bill. Please select a clear receipt photo."}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <button
-          onClick={onReset}
-          className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-slate-900 text-white rounded-2xl font-semibold hover:bg-slate-800 active:scale-95 transition shadow-lg shadow-slate-200"
-        >
-          <RotateCcw className="w-4 h-4" />
-          Pick Another Photo
-        </button>
+        <div className="pt-3">
+          <button
+            onClick={onReset}
+            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-slate-900 text-white rounded-2xl font-semibold hover:bg-slate-800 active:scale-95 transition shadow-lg shadow-slate-200"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Pick Another Photo
+          </button>
+        </div>
       </div>
     );
   }

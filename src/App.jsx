@@ -529,18 +529,21 @@ export default function App() {
           </button>
         </header>
 
-        {/* Floating Limit Exceeded Banner / Toast */}
+        {/* Floating Limit Exceeded Toast (Zero layout shift, floats over UI) */}
         {limitExceededWarning && (
-          <div className="mx-4 mt-2 p-3 bg-amber-500 text-white rounded-2xl shadow-lg flex items-center justify-between text-xs font-semibold animate-slide-down z-30">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-white" />
-              <span>{limitExceededWarning}</span>
+          <div className="fixed top-4 left-4 right-4 max-w-md mx-auto z-50 p-3.5 bg-slate-900/95 text-white rounded-2xl shadow-2xl border border-white/10 backdrop-blur-md flex items-center justify-between text-xs font-semibold animate-slide-down">
+            <div className="flex items-center gap-2.5 min-w-0 pr-2">
+              <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+              <span className="leading-snug">{limitExceededWarning}</span>
             </div>
             <button
               onClick={() => setLimitExceededWarning(null)}
-              className="p-1 hover:bg-amber-600 rounded-lg text-white/80 hover:text-white transition"
+              className="p-1.5 hover:bg-white/10 rounded-xl text-white/70 hover:text-white transition active:scale-95 shrink-0"
+              title="Dismiss"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -667,7 +670,7 @@ export default function App() {
         {/* ============================================================== */}
         {/* VIEW 2: Image Preview & Analyze Screen                         */}
         {/* ============================================================== */}
-        {selectedImage && !analysisResult && !batchItems && (
+        {selectedImage && (!analysisResult || !analysisResult.is_bill) && !batchItems && (
           <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -683,8 +686,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* White Card with Image Preview */}
-            <div className="flex-1 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-center overflow-hidden max-h-[460px] relative">
+            {/* White Card with Image Preview (Rock-solid fixed height, never shifts or resizes) */}
+            <div className="h-[370px] sm:h-[440px] w-full shrink-0 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-center overflow-hidden relative shadow-xs">
               <img
                 src={selectedImage.dataUrl}
                 alt="Captured receipt preview"
@@ -712,113 +715,144 @@ export default function App() {
               )}
             </div>
 
-            {/* Live On-Device Status Indicator */}
-            {isVerifyingLocal && (
-              <div className="mt-2.5 p-2.5 bg-indigo-50/70 border border-indigo-100 rounded-xl flex items-center justify-between text-xs text-indigo-700 animate-pulse">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-indigo-600 shrink-0" />
-                  <span className="font-semibold">On-Device AI:</span>
-                  <span>Verifying receipt locally...</span>
-                </div>
-                <span className="text-[10px] font-mono font-bold text-indigo-500 bg-white px-2 py-0.5 rounded-md border border-indigo-100">
-                  MobileNetV3
-                </span>
-              </div>
-            )}
-
-            {/* Validated On-Device Receipt Badge */}
-            {!isVerifyingLocal && localVerification?.isValidBill && !localVerification?.bypassed && (
-              <div className="mt-2.5 p-2.5 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center justify-between text-xs text-emerald-800">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <div>
-                    <span className="font-bold">Verified Receipt</span>
-                    <span className="text-emerald-700 ml-1.5 font-medium">({localVerification.confidencePct}% confidence)</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">
-                  <Zap className="w-3 h-3 text-emerald-500" />
-                  {localVerification.latencyMs}ms
-                </div>
-              </div>
-            )}
-
-            {/* Soft Rejection Card with User Override */}
-            {!isVerifyingLocal && localVerification && !localVerification.isValidBill && (
-              <div className="mt-2.5 p-3.5 bg-amber-50/95 border border-amber-200 rounded-2xl shadow-xs space-y-2.5">
+            {/* IN-PLACE AI REJECTION CARD: When AI determines image is not a bill */}
+            {analysisResult && !analysisResult.is_bill && (
+              <div className="mt-2.5 p-3.5 bg-rose-50/95 border border-rose-200 rounded-2xl shadow-xs space-y-2.5 animate-fade-in">
                 <div className="flex items-start gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
-                    <AlertTriangle className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <AlertCircle className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-amber-900">
-                      Receipt Not Detected (Confidence: {localVerification.confidencePct || 0}%)
-                    </p>
-                    <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
-                      This doesn't look like a standard bill. Tap Scan Anyway if this is a valid receipt.
+                    <p className="text-xs font-bold text-rose-950">Not a Bill or Receipt</p>
+                    <p className="text-[11px] text-rose-700 mt-0.5 leading-relaxed">
+                      {analysisResult.rejection_reason || "This image does not appear to be a valid receipt or bill. Please select a clear receipt photo."}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 pt-1 border-t border-amber-200/60">
+                <div className="pt-1">
                   <button
                     onClick={handleReset}
-                    className="flex-1 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition active:scale-95 text-center"
+                    className="w-full py-2.5 text-xs font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition shadow-xs active:scale-95 flex items-center justify-center gap-1.5"
                   >
-                    Pick Another
-                  </button>
-                  <button
-                    disabled={isAnalyzing || !isEngineReady}
-                    onClick={() => handleAnalyze(true)}
-                    className="flex-1 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition shadow-xs active:scale-95 text-center flex items-center justify-center gap-1.5"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Scan Anyway
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Pick Another Photo
                   </button>
                 </div>
               </div>
             )}
 
-            {/* Error Alert */}
-            {errorMessage && (
-              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700">
-                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold">Error:</span> {errorMessage}
-                </div>
-              </div>
-            )}
+            {/* PRE-ANALYSIS STATE: Local verification & analyze button */}
+            {!analysisResult && (
+              <>
+                {/* Live On-Device Status Indicator */}
+                {isVerifyingLocal && (
+                  <div className="mt-2.5 p-2.5 bg-indigo-50/70 border border-indigo-100 rounded-xl flex items-center justify-between text-xs text-indigo-700 animate-pulse">
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-indigo-600 shrink-0" />
+                      <span className="font-semibold">On-Device AI:</span>
+                      <span>Verifying receipt locally...</span>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold text-indigo-500 bg-white px-2 py-0.5 rounded-md border border-indigo-100">
+                      MobileNetV3
+                    </span>
+                  </div>
+                )}
 
-            {/* Primary Analyze Button (When Validated or Pending) */}
-            {(!localVerification || localVerification.isValidBill) && (
-              <div className="pt-3.5">
-                <button
-                  disabled={isAnalyzing || !isEngineReady || isVerifyingLocal}
-                  onClick={() => handleAnalyze(false)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-indigo-600 text-white rounded-2xl font-semibold shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition disabled:opacity-50"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : !isEngineReady ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Connecting AI Engine...
-                    </>
-                  ) : isVerifyingLocal ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Checking Receipt Locally...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5" />
-                      Analyze Bill with AI
-                    </>
-                  )}
-                </button>
-              </div>
+                {/* Validated On-Device Receipt Badge */}
+                {!isVerifyingLocal && localVerification?.isValidBill && !localVerification?.bypassed && (
+                  <div className="mt-2.5 p-2.5 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center justify-between text-xs text-emerald-800">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <div>
+                        <span className="font-bold">Verified Receipt</span>
+                        <span className="text-emerald-700 ml-1.5 font-medium">({localVerification.confidencePct}% confidence)</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">
+                      <Zap className="w-3 h-3 text-emerald-500" />
+                      {localVerification.latencyMs}ms
+                    </div>
+                  </div>
+                )}
+
+                {/* Soft Rejection Card with User Override */}
+                {!isVerifyingLocal && localVerification && !localVerification.isValidBill && (
+                  <div className="mt-2.5 p-3.5 bg-amber-50/95 border border-amber-200 rounded-2xl shadow-xs space-y-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                        <AlertTriangle className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-amber-900">
+                          Receipt Not Detected (Confidence: {localVerification.confidencePct || 0}%)
+                        </p>
+                        <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
+                          This doesn't look like a standard bill. Tap Scan Anyway if this is a valid receipt.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 border-t border-amber-200/60">
+                      <button
+                        onClick={handleReset}
+                        className="flex-1 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition active:scale-95 text-center"
+                      >
+                        Pick Another
+                      </button>
+                      <button
+                        disabled={isAnalyzing || !isEngineReady}
+                        onClick={() => handleAnalyze(true)}
+                        className="flex-1 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition shadow-xs active:scale-95 text-center flex items-center justify-center gap-1.5"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        Scan Anyway
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error Alert */}
+                {errorMessage && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-semibold">Error:</span> {errorMessage}
+                    </div>
+                  </div>
+                )}
+
+                {/* Primary Analyze Button (When Validated or Pending) */}
+                {(!localVerification || localVerification.isValidBill) && (
+                  <div className="pt-3.5">
+                    <button
+                      disabled={isAnalyzing || !isEngineReady || isVerifyingLocal}
+                      onClick={() => handleAnalyze(false)}
+                      className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-indigo-600 text-white rounded-2xl font-semibold shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition disabled:opacity-50"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Analyzing...
+                        </>
+                      ) : !isEngineReady ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Connecting AI Engine...
+                        </>
+                      ) : isVerifyingLocal ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Checking Receipt Locally...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5" />
+                          Analyze Bill with AI
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -826,7 +860,7 @@ export default function App() {
         {/* ============================================================== */}
         {/* VIEW 3: Analysis Results (Review & Fix Screen)                 */}
         {/* ============================================================== */}
-        {selectedImage && analysisResult && !batchItems && (
+        {selectedImage && analysisResult && analysisResult.is_bill && !batchItems && (
           <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 flex flex-col">
             <BillResult
               imageDataUrl={selectedImage.dataUrl}
