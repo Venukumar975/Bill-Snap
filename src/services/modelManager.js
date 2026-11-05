@@ -208,3 +208,16 @@ export async function refreshModelEngine(apiKey, onFirstReady, onAllReady) {
   }
 }
 
+/**
+ * Calculates the dynamic safe batch limit based on available cached models.
+ * Rule: If N models available, limit = max(1, min(5, N - 1))
+ * Leaves at least 1 model in reserve for failover / rate limit headroom.
+ */
+export function getDynamicBatchLimit(apiKey) {
+  const models = getCachedModels(apiKey);
+  if (!models || models.length === 0) return 3; // sensible default
+  const n = models.length;
+  if (n <= 1) return 1;
+  return Math.min(5, Math.max(1, n - 1));
+}
+

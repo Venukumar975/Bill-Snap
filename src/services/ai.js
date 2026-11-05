@@ -4,12 +4,9 @@ import { getActiveApiKey } from './apiKeyManager';
 
 /**
  * Extracts receipt information using the active model with automatic failover.
- * 
- * - Tries the active model first
- * - If 404/410 (model dead), flushes it from cache and auto-retries next model
- * - If 429 (rate limit), temporarily tries next model without flushing
+ * Allows specifying a preferredModelName for distributed batch processing.
  */
-export async function extractBillData(base64DataUrl, customApiKey = null) {
+export async function extractBillData(base64DataUrl, customApiKey = null, preferredModelName = null) {
   const apiKey = customApiKey || getActiveApiKey();
 
   if (!apiKey) {
@@ -33,6 +30,11 @@ export async function extractBillData(base64DataUrl, customApiKey = null) {
 
   if (!modelQueue || modelQueue.length === 0) {
     throw new Error('No active Gemini models available. Please verify your API key.');
+  }
+
+  // If a preferred model is specified (e.g. for batch striping), put it first in queue
+  if (preferredModelName && modelQueue.includes(preferredModelName)) {
+    modelQueue = [preferredModelName, ...modelQueue.filter(m => m !== preferredModelName)];
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
@@ -131,6 +133,22 @@ Respond strictly with this JSON structure:
     }
   }
 
-  // If every model in queue failed, throw clear error
-  throw new Error(`All available models failed. Last error: ${lastError?.message || 'Unknown error'}`);
+  // If every model in queue failed, throw clean, user-friendly error
+  const isOffline = (typeof navigator !== 'undefined' && !navigator.onLine) ||
+                    lastError?.message?.includes('Failed to fetch') ||
+                    lastError?.message?.includes('NetworkError') ||
+                    lastError?.message?.includes('network');
+
+  if (isOffline) {
+    throw new Error('No Internet Connection — Please connect to Wi-Fi or mobile data and tap Retry.');
+  }
+
+  // Sanitize any raw URL dumps or internal SDK prefixes
+  const cleanMsg = lastError?.message
+    ?.replace(/https?:\/\/[^\s]+/g, '')
+    ?.replace(/\[GoogleGenerativeAI Error\]:\s*/gi, '')
+    ?.replace(/Error fetching from/gi, '')
+    ?.trim() || 'Extraction failed';
+
+  throw new Error(`AI extraction failed: ${cleanMsg}`);
 }

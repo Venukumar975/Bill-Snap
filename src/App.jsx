@@ -25,8 +25,9 @@ import BillCard from './components/BillCard';
 import SettingsModal from './components/SettingsModal';
 import Sidebar from './components/Sidebar';
 import CategoryBreakdownModal from './components/CategoryBreakdownModal';
+import BatchReview from './components/BatchReview';
 import { extractBillData } from './services/ai';
-import { initModelEngine, getCachedModels, refreshModelEngine } from './services/modelManager';
+import { initModelEngine, getCachedModels, refreshModelEngine, getDynamicBatchLimit } from './services/modelManager';
 import { saveBill, getAllBills, deleteBill, clearAllBills } from './services/storage';
 import { getActiveApiKey } from './services/apiKeyManager';
 import { classifyReceiptLocally } from './services/localModelService';
@@ -54,6 +55,22 @@ export default function App() {
   const [isRefreshingEngine, setIsRefreshingEngine] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [activeCategoryFilter, setActiveCategoryFilter] = useState(null);
+
+  // Batch Processing State (Gallery Multi-Select)
+  const [batchItems, setBatchItems] = useState(null);
+  const [batchLimitNotice, setBatchLimitNotice] = useState(null);
+  const [limitExceededWarning, setLimitExceededWarning] = useState(null);
+
+  const dynamicBatchLimit = getDynamicBatchLimit(getActiveApiKey());
+
+  const handleLimitExceeded = ({ selectedCount, limit }) => {
+    setLimitExceededWarning(
+      `Limit Exceeded: You selected ${selectedCount} receipts. Your safe limit is ${limit} bills (based on active AI models). Please select up to ${limit}.`
+    );
+    setTimeout(() => {
+      setLimitExceededWarning(null);
+    }, 6000);
+  };
 
   // Load Saved Bills from IndexedDB on startup
   useEffect(() => {
@@ -230,6 +247,204 @@ export default function App() {
     }
   };
 
+  // ==============================================================
+  // BATCH PROCESSING HANDLERS (Gallery Multi-Select)
+  // ==============================================================
+  const handleBatchSelected = async ({ items, totalSelected, batchLimit }) => {
+    if (!items || items.length === 0) return;
+
+    // Reset single-image mode
+    setSelectedImage(null);
+    setAnalysisResult(null);
+
+    if (totalSelected > batchLimit) {
+      setBatchLimitNotice(
+        `Selected ${totalSelected} receipts. Processing first ${items.length} to stay within safe model concurrency.`
+      );
+    } else {
+      setBatchLimitNotice(null);
+    }
+
+    const apiKey = getActiveApiKey();
+    const models = getCachedModels(apiKey) || [activeModel || 'gemini-2.5-flash'];
+
+    // Map each item with dynamic sharded model assignment
+    const initialBatch = items.map((img, idx) => ({
+      id: `batch_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 6)}`,
+      name: img.name,
+      file: img.file,
+      dataUrl: img.dataUrl,
+      assignedModel: models[idx % models.length],
+      localStatus: 'checking',
+      localVerification: null,
+      aiStatus: 'idle',
+      analysis: null,
+      errorMessage: null
+    }));
+
+    setBatchItems(initialBatch);
+
+    // Process each item through cascaded pipeline
+    initialBatch.forEach(async (batchItem) => {
+      // 1. Local MobileNetV3 Check
+      let verification = null;
+      try {
+        verification = await classifyReceiptLocally(batchItem.dataUrl);
+      } catch (e) {
+        verification = { isSupported: false, isValidBill: true };
+      }
+
+      const isLocalValid = verification ? verification.isValidBill : true;
+
+      if (!isLocalValid && !verification?.bypassed) {
+        // Soft rejection state
+        setBatchItems((prev) =>
+          prev
+            ? prev.map((it) =>
+                it.id === batchItem.id
+                  ? { ...it, localStatus: 'invalid', localVerification: verification }
+                  : it
+              )
+            : null
+        );
+        return;
+      }
+
+      // Mark locally valid and start AI extraction
+      setBatchItems((prev) =>
+        prev
+          ? prev.map((it) =>
+              it.id === batchItem.id
+                ? {
+                    ...it,
+                    localStatus: 'valid',
+                    localVerification: verification,
+                    aiStatus: 'analyzing'
+                  }
+                : it
+            )
+          : null
+      );
+
+      // 2. Multimodal AI Extraction with dynamically assigned model
+      try {
+        const data = await extractBillData(batchItem.dataUrl, apiKey, batchItem.assignedModel);
+        if (verification) {
+          data._localVerification = verification;
+        }
+        setBatchItems((prev) =>
+          prev
+            ? prev.map((it) =>
+                it.id === batchItem.id
+                  ? { ...it, aiStatus: 'done', analysis: data }
+                  : it
+              )
+            : null
+        );
+      } catch (err) {
+        setBatchItems((prev) =>
+          prev
+            ? prev.map((it) =>
+                it.id === batchItem.id
+                  ? { ...it, aiStatus: 'error', errorMessage: err.message || 'Extraction failed' }
+                  : it
+              )
+            : null
+        );
+      }
+    });
+  };
+
+  const handleUpdateBatchItem = (id, updatedItem) => {
+    setBatchItems((prev) =>
+      prev ? prev.map((it) => (it.id === id ? updatedItem : it)) : null
+    );
+  };
+
+  const handleRemoveBatchItem = (id) => {
+    setBatchItems((prev) => {
+      if (!prev) return null;
+      const next = prev.filter((it) => it.id !== id);
+      return next.length > 0 ? next : null;
+    });
+  };
+
+  const handleRetryBatchItem = async (id, bypassLocal = false) => {
+    const item = batchItems?.find((it) => it.id === id);
+    if (!item) return;
+
+    setBatchItems((prev) =>
+      prev
+        ? prev.map((it) =>
+            it.id === id
+              ? { ...it, localStatus: 'valid', aiStatus: 'analyzing', errorMessage: null }
+              : it
+          )
+        : null
+    );
+
+    const apiKey = getActiveApiKey();
+    try {
+      const data = await extractBillData(item.dataUrl, apiKey, item.assignedModel);
+      if (item.localVerification) {
+        data._localVerification = item.localVerification;
+      }
+      setBatchItems((prev) =>
+        prev
+          ? prev.map((it) =>
+              it.id === id
+                ? { ...it, aiStatus: 'done', analysis: data }
+                : it
+            )
+          : null
+      );
+    } catch (err) {
+      setBatchItems((prev) =>
+        prev
+          ? prev.map((it) =>
+              it.id === id
+                ? { ...it, aiStatus: 'error', errorMessage: err.message || 'Retry failed' }
+                : it
+            )
+          : null
+      );
+    }
+  };
+
+  const handleSaveAllBatchBills = async (validItems) => {
+    try {
+      for (const item of validItems) {
+        const analysis = item.analysis;
+        const billData = {
+          merchant: analysis.merchant?.value || item.name || 'Store',
+          date: analysis.date?.value || new Date().toISOString().split('T')[0],
+          totalAmount: parseFloat(analysis.total_amount?.value) || 0,
+          currency: analysis.total_amount?.currency || '₹',
+          category: analysis.category || 'Other',
+          imageDataUrl: item.dataUrl,
+          confidence: {
+            merchant: analysis.merchant?.confidence,
+            date: analysis.date?.confidence,
+            total_amount: analysis.total_amount?.confidence
+          }
+        };
+        await saveBill(billData);
+      }
+
+      const refreshed = await getAllBills();
+      setSavedBills(refreshed);
+      setBatchItems(null);
+      setBatchLimitNotice(null);
+    } catch (err) {
+      alert(`Error saving batch bills: ${err.message}`);
+    }
+  };
+
+  const handleCancelBatch = () => {
+    setBatchItems(null);
+    setBatchLimitNotice(null);
+  };
+
   const handleDeleteBill = async (id) => {
     try {
       await deleteBill(id);
@@ -314,10 +529,26 @@ export default function App() {
           </button>
         </header>
 
+        {/* Floating Limit Exceeded Banner / Toast */}
+        {limitExceededWarning && (
+          <div className="mx-4 mt-2 p-3 bg-amber-500 text-white rounded-2xl shadow-lg flex items-center justify-between text-xs font-semibold animate-slide-down z-30">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-white" />
+              <span>{limitExceededWarning}</span>
+            </div>
+            <button
+              onClick={() => setLimitExceededWarning(null)}
+              className="p-1 hover:bg-amber-600 rounded-lg text-white/80 hover:text-white transition"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
         {/* ============================================================== */}
         {/* VIEW 1: HOME FEED (When no image is currently being processed) */}
         {/* ============================================================== */}
-        {!selectedImage && (
+        {!selectedImage && !batchItems && (
           <>
             {savedBills.length === 0 ? (
               /* Empty State when zero bills exist */
@@ -331,7 +562,12 @@ export default function App() {
                 </p>
 
                 <div className="w-full max-w-xs">
-                  <ImagePicker onImageSelected={handleImageSelected} />
+                  <ImagePicker 
+                    onImageSelected={handleImageSelected} 
+                    onBatchSelected={handleBatchSelected}
+                    onLimitExceeded={handleLimitExceeded}
+                    batchLimit={dynamicBatchLimit}
+                  />
                 </div>
               </div>
             ) : (
@@ -417,16 +653,21 @@ export default function App() {
                 </div>
 
                 {/* 4. Floating Action Button (FAB) */}
-                <AddBillFAB onImageSelected={handleImageSelected} />
+                <AddBillFAB 
+                  onImageSelected={handleImageSelected} 
+                  onBatchSelected={handleBatchSelected}
+                  onLimitExceeded={handleLimitExceeded}
+                  batchLimit={dynamicBatchLimit}
+                />
               </div>
             )}
           </>
         )}
 
         {/* ============================================================== */}
-        {/* VIEW 2: Image Preview & Analyze Screen */}
+        {/* VIEW 2: Image Preview & Analyze Screen                         */}
         {/* ============================================================== */}
-        {selectedImage && !analysisResult && (
+        {selectedImage && !analysisResult && !batchItems && (
           <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -492,7 +733,7 @@ export default function App() {
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                   <div>
                     <span className="font-bold">Verified Receipt</span>
-                    <span className="text-emerald-700 ml-1.5 font-medium">({localVerification.confidencePct}% match)</span>
+                    <span className="text-emerald-700 ml-1.5 font-medium">({localVerification.confidencePct}% confidence)</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">
@@ -510,9 +751,11 @@ export default function App() {
                     <AlertTriangle className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-amber-900">Receipt Not Clearly Detected</p>
+                    <p className="text-xs font-bold text-amber-900">
+                      Receipt Not Detected (Confidence: {localVerification.confidencePct || 0}%)
+                    </p>
                     <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
-                      On-device confidence is only <strong className="font-mono">{Math.round((localVerification.rawProbValid || 0) * 100)}%</strong>. This doesn't look like a standard bill, or lighting/angle might be steep.
+                      This doesn't look like a standard bill. Tap Scan Anyway if this is a valid receipt.
                     </p>
                   </div>
                 </div>
@@ -529,7 +772,7 @@ export default function App() {
                     className="flex-1 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition shadow-xs active:scale-95 text-center flex items-center justify-center gap-1.5"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    Scan with AI Anyway
+                    Scan Anyway
                   </button>
                 </div>
               </div>
@@ -581,9 +824,9 @@ export default function App() {
         )}
 
         {/* ============================================================== */}
-        {/* VIEW 3: Analysis Results (Review & Fix Screen) */}
+        {/* VIEW 3: Analysis Results (Review & Fix Screen)                 */}
         {/* ============================================================== */}
-        {selectedImage && analysisResult && (
+        {selectedImage && analysisResult && !batchItems && (
           <div className="flex-1 overflow-y-auto px-4 pt-3 pb-6 flex flex-col">
             <BillResult
               imageDataUrl={selectedImage.dataUrl}
@@ -592,6 +835,21 @@ export default function App() {
               onReset={handleReset}
             />
           </div>
+        )}
+
+        {/* ============================================================== */}
+        {/* VIEW 4: Batch Review Screen (Gallery Multi-Select)             */}
+        {/* ============================================================== */}
+        {batchItems && batchItems.length > 0 && (
+          <BatchReview
+            batchItems={batchItems}
+            onUpdateItem={handleUpdateBatchItem}
+            onRemoveItem={handleRemoveBatchItem}
+            onRetryItem={handleRetryBatchItem}
+            onSaveAll={handleSaveAllBatchBills}
+            onCancel={handleCancelBatch}
+            batchLimitNotice={batchLimitNotice}
+          />
         )}
 
         {/* Slide-over Sidebar Drawer */}

@@ -183,7 +183,7 @@ export async function classifyReceiptLocally(imageSource) {
   // 1. probValid >= 0.65 auto-approves
   // 2. probValid < 0.65 flags for soft rejection with user override ("Scan Anyway")
   const isValidBill = probValid >= ACCEPT_THRESHOLD;
-  const confidencePct = Math.round((isValidBill ? probValid : probInvalid) * 100);
+  const confidencePct = Math.round(probValid * 100); // Always reflects genuine bill confidence score
 
   return {
     isSupported: true,
