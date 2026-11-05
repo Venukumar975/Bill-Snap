@@ -130,30 +130,34 @@ export default function CategoryBreakdownModal({
     const targetMonth = activeDate.getMonth(); // 0-indexed
 
     return bills.filter((b) => {
-      // Check date string first
+      // Check date string on the receipt first
       if (b.date) {
         // Handle YYYY-MM-DD
         const parts = b.date.split('-');
         if (parts.length === 3) {
           const y = parseInt(parts[0], 10);
           const m = parseInt(parts[1], 10) - 1;
-          if (y === targetYear && m === targetMonth) return true;
+          if (!isNaN(y) && !isNaN(m)) {
+            return y === targetYear && m === targetMonth;
+          }
         }
         // Handle DD/MM/YYYY
         const slashParts = b.date.split('/');
         if (slashParts.length === 3) {
           const y = parseInt(slashParts[2], 10);
           const m = parseInt(slashParts[1], 10) - 1;
-          if (y === targetYear && m === targetMonth) return true;
+          if (!isNaN(y) && !isNaN(m)) {
+            return y === targetYear && m === targetMonth;
+          }
         }
       }
 
-      // Fallback to createdAt or savedAt timestamp
+      // Fallback ONLY if receipt date is missing or unparseable
       const timestamp = b.savedAt || b.createdAt;
       if (timestamp) {
         const d = new Date(timestamp);
-        if (d.getFullYear() === targetYear && d.getMonth() === targetMonth) {
-          return true;
+        if (!isNaN(d.getTime())) {
+          return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
         }
       }
 

@@ -17,7 +17,7 @@ This document provides a comprehensive technical reference for the local, on-dev
 | **Input Shape** | `[1, 3, 192, 192]` (Batch: 1, Channels: 3 RGB planar, Height: 192, Width: 192) |
 | **Output Shape** | `[1, 2]` (Logits: Class 0 = Non-Bill / Invalid, Class 1 = Bill / Valid) |
 | **Execution Engine** | ONNX Runtime Web (`ort-wasm.wasm`, single-threaded WASM runtime) |
-| **Device Latency** | **15 ms – 38 ms** on modern desktop/laptop; **25 ms – 55 ms** on mobile phones |
+| **Device Latency** | **15 ms – 50 ms** on desktop/laptop; **0 ms – 700 ms** on mobile phones (sub-second) |
 | **Operating Mode** | 100% on-device, zero-network, private edge pre-filter |
 | **Decision Threshold** | **`0.65`** ($P(\text{Valid}) \ge 0.65 \implies$ Verified Receipt) |
 
@@ -27,7 +27,7 @@ In a client-side BYOK (Bring Your Own Key) architecture, sending non-receipt pho
 2. **High Latency Feedback**: Cloud LLM round-trips take between 1.5 to 4.5 seconds just to tell the user: *"This is not a receipt"*.
 
 By deploying a 6.30 MB MobileNetV3 model locally in WebAssembly:
-- Images are pre-screened in **15 milliseconds** directly in the browser's RAM.
+- Images are pre-screened locally (0 ms – 700 ms on mobile) directly in the browser's RAM.
 - Non-bills are caught instantly on-device before any API request is dispatched.
 - Legitimate receipts provide immediate visual reassurance (`Verified Receipt (99% match) • 18ms`).
 
@@ -37,7 +37,26 @@ By deploying a 6.30 MB MobileNetV3 model locally in WebAssembly:
 
 The model leverages the **MobileNetV3-Small** convolutional architecture designed specifically for high-efficiency mobile and edge vision tasks.
 
-![Netron Computational Graph](docs/assets/netron_architecture.png)
+<p align="center">
+  <a href="docs/assets/netron_architecture.svg" target="_blank">
+    <img src="https://img.shields.io/badge/🔍%20Zoom%20In%20%2F%20Vector%20SVG-Open%20Interactive%20Graph-blue?style=for-the-badge&logo=onnx&logoColor=white" alt="Open Netron Vector SVG">
+  </a>
+  &nbsp;
+  <a href="docs/assets/netron_architecture.png" target="_blank">
+    <img src="https://img.shields.io/badge/🖼️%20Raster%20Overview-High%20Res%20PNG-grey?style=for-the-badge" alt="Open Netron PNG">
+  </a>
+</p>
+
+<div align="center">
+  <div style="max-height: 520px; max-width: 420px; overflow-y: auto; overflow-x: auto; border: 1px solid #cbd5e1; border-radius: 16px; padding: 16px; background: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+    <a href="docs/assets/netron_architecture.svg" target="_blank" title="Click to open full zoomable vector graph in new tab">
+      <img src="docs/assets/netron_architecture.svg" alt="Netron Computational Graph SVG" width="287" style="width: 287px; max-width: 100%; height: auto; display: block; margin: 0 auto;">
+    </a>
+  </div>
+</div>
+<p align="center">
+  <em>💡 Scroll inside the container to inspect layers at native 1:1 scale, or click the <strong>🔍 Zoom In / Vector SVG</strong> badge above to freely pan, zoom, and inspect layer dimensions in full resolution.</em>
+</p>
 
 ### Key Structural Modules:
 1. **Stem Convolution**:
