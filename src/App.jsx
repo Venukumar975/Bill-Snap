@@ -686,8 +686,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* White Card with Image Preview (Rock-solid fixed height, never shifts or resizes) */}
-            <div className="h-[370px] sm:h-[440px] w-full shrink-0 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-center overflow-hidden relative shadow-xs">
+            {/* White Card with Image Preview (Optimal mobile viewport allocation, no dead space) */}
+            <div className="h-[52vh] min-h-[420px] max-h-[560px] w-full shrink-0 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-center overflow-hidden relative shadow-xs">
               <img
                 src={selectedImage.dataUrl}
                 alt="Captured receipt preview"
@@ -717,14 +717,14 @@ export default function App() {
 
             {/* IN-PLACE AI REJECTION CARD: When AI determines image is not a bill */}
             {analysisResult && !analysisResult.is_bill && (
-              <div className="mt-2.5 p-3.5 bg-rose-50/95 border border-rose-200 rounded-2xl shadow-xs space-y-2.5 animate-fade-in">
-                <div className="flex items-start gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <AlertCircle className="w-4 h-4" />
+              <div className="mt-3 p-4 bg-rose-50/90 border border-rose-200/90 rounded-2xl shadow-xs space-y-3 animate-fade-in">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5 border border-rose-200/60">
+                    <AlertCircle className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-rose-950">Not a Bill or Receipt</p>
-                    <p className="text-[11px] text-rose-700 mt-0.5 leading-relaxed">
+                    <p className="text-sm font-bold text-rose-950">Not a Bill or Receipt</p>
+                    <p className="text-xs font-medium text-rose-900 mt-1 leading-relaxed">
                       {analysisResult.rejection_reason || "This image does not appear to be a valid receipt or bill. Please select a clear receipt photo."}
                     </p>
                   </div>
@@ -732,9 +732,9 @@ export default function App() {
                 <div className="pt-1">
                   <button
                     onClick={handleReset}
-                    className="w-full py-2.5 text-xs font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition shadow-xs active:scale-95 flex items-center justify-center gap-1.5"
+                    className="w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition shadow-md active:scale-95 flex items-center justify-center gap-2"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="w-4 h-4" />
                     Pick Another Photo
                   </button>
                 </div>

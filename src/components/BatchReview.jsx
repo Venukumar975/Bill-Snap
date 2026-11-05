@@ -137,10 +137,10 @@ export default function BatchReview({
 
         <button
           onClick={onCancel}
-          className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition active:scale-95"
+          className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-600 flex items-center justify-center transition active:scale-95"
           title="Cancel Batch"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
 
@@ -206,7 +206,7 @@ export default function BatchReview({
 
                     <button
                       onClick={() => onRemoveItem(item.id)}
-                      className="p-1 text-slate-400 hover:text-rose-600 hover:bg-white rounded-md transition active:scale-95"
+                      className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 flex items-center justify-center transition active:scale-90"
                       title="Remove from batch"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -275,7 +275,7 @@ export default function BatchReview({
                           </button>
                           <button
                             onClick={() => onRemoveItem(item.id)}
-                            className="py-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-semibold transition active:scale-95"
+                            className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-[10px] font-bold transition active:scale-95"
                           >
                             Dismiss
                           </button>
@@ -285,17 +285,18 @@ export default function BatchReview({
 
                     {/* STATE 2: AI Rejected (Gemini says is_bill === false) */}
                     {isRejectedBill && (
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-1.5 text-rose-800 text-[11px]">
-                          <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
-                          <span className="leading-tight font-medium">
-                            {item.analysis?.rejection_reason || 'Not a valid bill.'}
+                      <div className="space-y-2.5">
+                        <div className="p-2.5 bg-rose-50/80 border border-rose-200/80 rounded-xl flex items-start gap-2 text-rose-900">
+                          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                          <span className="text-xs leading-relaxed font-medium">
+                            {item.analysis?.rejection_reason || 'Not a valid bill or receipt.'}
                           </span>
                         </div>
                         <button
                           onClick={() => onRemoveItem(item.id)}
-                          className="w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-semibold transition active:scale-95"
+                          className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition active:scale-95 shadow-2xs"
                         >
+                          <Trash2 className="w-3.5 h-3.5" />
                           Remove from Batch
                         </button>
                       </div>

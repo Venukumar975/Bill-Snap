@@ -24,7 +24,7 @@ export default function BillResult({
       <div className="flex-1 flex flex-col justify-between overflow-y-auto">
         <div className="space-y-3">
           {/* Framed Image Container (Consistent height, no jump) */}
-          <div className="h-[370px] sm:h-[440px] w-full shrink-0 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-center overflow-hidden relative shadow-xs">
+          <div className="h-[52vh] min-h-[420px] max-h-[560px] w-full shrink-0 bg-slate-50 border border-slate-200/80 rounded-2xl p-2 flex items-center justify-center overflow-hidden relative shadow-xs">
             <img 
               src={imageDataUrl} 
               alt="Rejected image preview" 
@@ -33,14 +33,14 @@ export default function BillResult({
           </div>
 
           {/* In-place Rejection Card */}
-          <div className="p-3.5 bg-rose-50/95 border border-rose-200 rounded-2xl shadow-xs space-y-2">
-            <div className="flex items-start gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
-                <AlertCircle className="w-4 h-4" />
+          <div className="p-4 bg-rose-50/90 border border-rose-200/90 rounded-2xl shadow-xs space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 mt-0.5 border border-rose-200/60">
+                <AlertCircle className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-bold text-rose-950">Not a Bill or Receipt</p>
-                <p className="text-[11px] text-rose-700 mt-0.5 leading-relaxed">
+                <p className="text-sm font-bold text-rose-950">Not a Bill or Receipt</p>
+                <p className="text-xs font-medium text-rose-900 mt-1 leading-relaxed">
                   {analysis.rejection_reason || 
                     "This image does not appear to be a valid receipt or bill. Please select a clear receipt photo."}
                 </p>
@@ -52,7 +52,7 @@ export default function BillResult({
         <div className="pt-3">
           <button
             onClick={onReset}
-            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-slate-900 text-white rounded-2xl font-semibold hover:bg-slate-800 active:scale-95 transition shadow-lg shadow-slate-200"
+            className="w-full py-3 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition shadow-md active:scale-95 flex items-center justify-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
             Pick Another Photo

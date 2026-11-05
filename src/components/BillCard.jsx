@@ -72,10 +72,10 @@ export default function BillCard({ bill, onDelete }) {
           </div>
         </div>
 
-        {/* Delete Action */}
+        {/* Delete Action (Permanent red container with clear touch affordance) */}
         <button
           onClick={() => onDelete(bill.id)}
-          className="w-8 h-8 rounded-xl text-slate-300 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition shrink-0 active:scale-95"
+          className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 border border-rose-200/70 hover:bg-rose-100 flex items-center justify-center transition shrink-0 active:scale-90"
           title="Delete bill"
         >
           <Trash2 className="w-4 h-4" />
