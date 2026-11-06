@@ -11,6 +11,7 @@
 ### 📱 Live Web & Mobile Application (PWA)
 
 > 🔗 **Direct URL**: [**https://bill-snap-seven.vercel.app/**](https://bill-snap-seven.vercel.app/)
+> 🎥 **Video Demo**: [**Watch 2-Min Walkthrough on YouTube**](https://youtube.com/shorts/wF6MYNktfVI)
 
 #### 📲 How to Install & Run as a Native App on Your Phone (0 Setup):
 1. **Open on Phone**: Navigate to [**https://bill-snap-seven.vercel.app/**](https://bill-snap-seven.vercel.app/) in your mobile browser (**Chrome** on Android or **Safari** on iOS).
